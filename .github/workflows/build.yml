@@ -19,16 +19,20 @@ jobs:
 
       - name: Build
         run: |
-          set -o pipefail
+          set +e
           xcodebuild -project VinylPlayer.xcodeproj -target VinylPlayer -configuration Release \
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
-            SYMROOT="$PWD/build" build 2>&1 | tee build.log | grep -E "error:|warning: .*(deprecated|unused)|BUILD" || true
-          test -d "build/Release/Vinyl Player.app"
+            SYMROOT="$PWD/build" build > build.log 2>&1
+          status=$?
+          grep -E "error:|BUILD (SUCCEEDED|FAILED)" build.log | sort -u | head -60
+          # A real app has its program inside; never publish an empty bundle.
+          test $status -eq 0 && test -x "build/Release/Vinyl Player.app/Contents/MacOS/Vinyl Player" \
+            && test -x "build/Release/Vinyl Player.app/Contents/PlugIns/VinylWidgets.appex/Contents/MacOS/VinylWidgets"
 
       - name: Show errors
         if: failure()
         run: |
-          grep -E "error:" build.log | sort -u | head -40 | while IFS= read -r line; do
+          grep -E "error:" build.log | grep -v "^\*\*" | sort -u | head -40 | while IFS= read -r line; do
             echo "::error::${line//$GITHUB_WORKSPACE\//}"
           done
 
