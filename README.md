@@ -85,6 +85,7 @@ The app needs to have run at least once first.
 - **Where it lives:** choose under **Show As** in the menu bar menu (the welcome window asks the first time):
   - **Desktop player:** the full turntable on your desktop.
   - **Notch:** a tiny spinning record and the pet beside the MacBook notch. Hover over it to see the record big with its cover, plus the song, album, controls and progress.
+  - **Both:** the desktop turntable and the notch together.
   - **Menu bar only:** nothing on screen; control it from the menu and widgets.
 - **Library (⌘L in the menu):**
   - **Inbox:** records friends sent you, and records you opened from links.

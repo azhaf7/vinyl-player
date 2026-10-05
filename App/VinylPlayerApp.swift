@@ -75,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject, UNUs
         switch mode {
         case .desktop: notch.hide(); panel.show()
         case .notch: panel.hide(); notch.show()
+        case .both: panel.show(); notch.show()
         case .menuBar: panel.hide(); notch.hide()
         }
     }
@@ -143,7 +144,7 @@ private struct MenuContent: View {
         Picker("Show As", selection: $prefs.displayMode) {
             ForEach(DisplayMode.allCases) { Text($0.rawValue).tag($0) }
         }
-        if prefs.displayMode == .desktop {
+        if prefs.displayMode == .desktop || prefs.displayMode == .both {
             Toggle("Float Above Windows", isOn: $prefs.floatAboveWindows)
             Button("Move Player to Top Right") { app.panel.show(); app.panel.resetPosition() }
         }
@@ -176,7 +177,7 @@ private struct SettingsView: View {
                 }
                 Text(prefs.displayMode.blurb).font(.caption).foregroundStyle(.secondary)
                 Toggle("Open at login", isOn: Binding(get: { prefs.launchAtLogin }, set: { prefs.launchAtLogin = $0 }))
-                if prefs.displayMode == .desktop {
+                if prefs.displayMode == .desktop || prefs.displayMode == .both {
                     Toggle("Float above other windows", isOn: $prefs.floatAboveWindows)
                 }
                 Toggle("Pet operates the tonearm", isOn: $prefs.petOperatesArm)

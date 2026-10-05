@@ -538,7 +538,7 @@ private struct WelcomeView: View {
             PetSprite(pet: model.pet, pose: PetPose(arms: .up, eyes: .happy), pixel: 4)
             if step == 0 {
                 Text("Where should your turntable live?").font(.title.bold())
-                HStack(spacing: 14) {
+                HStack(spacing: 10) {
                     ForEach(DisplayMode.allCases) { m in
                         VStack(spacing: 10) {
                             Image(systemName: m.symbol).font(.system(size: 34))
@@ -546,7 +546,7 @@ private struct WelcomeView: View {
                             Text(m.blurb).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
                         }
                         .padding(16)
-                        .frame(width: 180, height: 170)
+                        .frame(width: 132, height: 170)
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color.primary.opacity(prefs.displayMode == m ? 0.1 : 0.04)))
                         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(prefs.displayMode == m ? Tokens.accent.color : .clear, lineWidth: 2))
                         .contentShape(Rectangle())
