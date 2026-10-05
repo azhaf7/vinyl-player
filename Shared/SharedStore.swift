@@ -51,8 +51,9 @@ enum SharedStore {
 
     /// `$(TeamIdentifierPrefix)vinylplayer`, expanded at build time into both Info.plists.
     static let groupID: String? = {
+        // Unsigned builds have no team prefix ("TEAMID."); skip the group then, so macOS doesn't ask for access.
         guard let id = Bundle.main.object(forInfoDictionaryKey: "VinylAppGroup") as? String,
-              !id.isEmpty, !id.contains("$(") else { return nil }
+              !id.contains("$("), id.contains(".") else { return nil }
         return id
     }()
 

@@ -17,13 +17,29 @@ What's included:
 
 It uses six sample songs for now. Spotify sign-in is the next step.
 
-## Requirements
+## Install the test build (no Xcode)
+
+Every change pushed to `main` is built automatically on GitHub, and the result is published as **[VinylPlayer.zip](https://github.com/azhaf7/vinyl-player/releases/download/latest/VinylPlayer.zip)** (also listed under **Releases → latest**).
+
+1. Download **VinylPlayer.zip** and double-click it to unzip.
+2. Drag **Vinyl Player** into your **Applications** folder.
+3. Double-click it. The build isn't signed with an Apple ID, so macOS blocks it the first time:
+   - **macOS 15 or later:** click **Done**, open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to "Vinyl Player". Then confirm.
+   - **macOS 14:** right-click the app, choose **Open**, then **Open** again.
+
+The turntable appears at the top right of the desktop, and a record icon appears in the menu bar.
+
+The test build has the full desktop player and pet. The **widgets need the signed version** you build with Xcode (below), because macOS only loads widgets from apps signed with an Apple ID.
+
+## Build it yourself with Xcode
+
+### Requirements
 
 - A Mac with **macOS 14 Sonoma** or later.
 - **Xcode 16** or later (free from the Mac App Store).
 - A free **Apple ID** to sign the app so it runs on your Mac.
 
-## Run it
+### Run it
 
 1. Clone or download this repository, then double-click **`VinylPlayer.xcodeproj`** to open it in Xcode.
 2. Add your Apple ID if Xcode doesn't have it yet: **Xcode → Settings → Accounts → +**.
@@ -35,13 +51,13 @@ It uses six sample songs for now. Spotify sign-in is the next step.
 
 The turntable appears at the top right of your desktop, and a record icon appears in the menu bar.
 
-### Keep it after closing Xcode
+#### Keep it after closing Xcode
 
 Choose **Product → Archive**, then **Distribute App → Copy App**. Drag the exported **Vinyl Player.app** into **Applications**.
 
 To have it start automatically, turn on **Settings… → Open at login** in its menu.
 
-### Add the widgets
+#### Add the widgets
 
 1. Right-click an empty part of the desktop and choose **Edit Widgets…**.
 2. Search for **Vinyl**, choose a size, and drag it onto the desktop or into Notification Center.
