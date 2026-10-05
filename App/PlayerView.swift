@@ -485,12 +485,7 @@ private struct CratePanel: View {
         let order = model.isLive
             ? Array(stride(from: min(model.index, tracks.count - 1), through: max(0, model.index - 19), by: -1))
             : tracks.indices.map { (model.index + $0) % tracks.count }
-        let custom = artwork.hasCustomCover(model.track)
         return VStack(alignment: .leading, spacing: 12) {
-            Text((custom ? "Replace cover for “" : "+ Use your own cover for “") + model.track.title + "”")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(ink.ink2)
-                .onTapGesture { artwork.pickCustomCover(for: model.track) }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(Array(order.enumerated()), id: \.element) { n, i in

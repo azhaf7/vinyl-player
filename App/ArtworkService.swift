@@ -2,8 +2,7 @@ import AppKit
 import CryptoKit
 import UniformTypeIdentifiers
 
-/// Album art and its tint. Order of priority: the user's own cover, then the playback source's artwork URL,
-/// then the iTunes Search API. Files live in the shared container so the widgets can show them.
+/// Album art and its tint: the playback source's artwork URL, otherwise the iTunes Search API. Files live in the shared container so the widgets can show them.
 final class ArtworkService: ObservableObject {
     static let shared = ArtworkService()
 
@@ -14,8 +13,6 @@ final class ArtworkService: ObservableObject {
         var tint: String?
         var album: String?
         var url: String?
-        var customFile: String?
-        var customTint: String?
     }
 
     private var index: [String: Entry] = [:]
@@ -27,6 +24,12 @@ final class ArtworkService: ObservableObject {
         if let data = try? Data(contentsOf: indexURL),
            let saved = try? JSONDecoder().decode([String: Entry].self, from: data) {
             index = saved
+        }
+        // Own covers are no longer offered; clear any left over from earlier versions.
+        if let files = try? FileManager.default.contentsOfDirectory(atPath: SharedStore.coversURL.path) {
+            for f in files where f.hasSuffix("-custom.jpg") {
+                try? FileManager.default.removeItem(at: SharedStore.coversURL.appendingPathComponent(f))
+            }
         }
     }
 
@@ -46,14 +49,13 @@ final class ArtworkService: ObservableObject {
 
     func tint(for track: Track) -> RGB {
         let e = index[track.key]
-        if let hex = e?.customTint ?? (e?.customFile == nil ? e?.tint : nil) { return RGB(hex: hex) }
+        if let hex = e?.tint { return RGB(hex: hex) }
         return track.fallbackTint
     }
 
     /// File name (inside `SharedStore.coversURL`) of the cover to show, if one is on disk.
     func coverFile(for track: Track) -> String? {
-        let e = index[track.key]
-        return e?.customFile ?? e?.file
+        index[track.key]?.file
     }
 
     /// A public web address for the cover (for share links): the music app's own, or the iTunes one.
@@ -61,37 +63,6 @@ final class ArtworkService: ObservableObject {
         let candidate = track.artworkURL ?? index[track.key]?.url
         guard let c = candidate, c.hasPrefix("https://") else { return nil }
         return c
-    }
-
-    func hasCustomCover(_ track: Track) -> Bool { index[track.key]?.customFile != nil }
-
-    // MARK: Custom covers
-
-    func pickCustomCover(for track: Track) {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image]
-        panel.allowsMultipleSelection = false
-        panel.message = "Choose a cover for “\(track.title)”"
-        NSApp.activate(ignoringOtherApps: true)
-        guard panel.runModal() == .OK, let url = panel.url, let img = NSImage(contentsOf: url),
-              let prepared = Self.prepare(img) else { return }
-        let jpeg = prepared.0, tint = prepared.1
-        let file = Self.fileName(track.key) + "-custom.jpg"
-        try? jpeg.write(to: SharedStore.coversURL.appendingPathComponent(file))
-        var e = index[track.key] ?? Entry()
-        e.customFile = file; e.customTint = tint.hex
-        index[track.key] = e
-        images[track.key] = nil
-        save()
-    }
-
-    func clearCustomCover(for track: Track) {
-        guard var e = index[track.key], let file = e.customFile else { return }
-        try? FileManager.default.removeItem(at: SharedStore.coversURL.appendingPathComponent(file))
-        e.customFile = nil; e.customTint = nil
-        index[track.key] = e
-        images[track.key] = nil
-        save()
     }
 
     // MARK: Lookup

@@ -74,7 +74,6 @@ The app needs to have run at least once first.
 - **Play / pause:** the white button, a click on the record, or the menu bar menu. The pet walks over and works the tonearm.
 - **Skip:** the back and next buttons. The pet lifts the record out and drops in the next one. With the sample songs, going between song 3 and song 4 flips the record from side A to side B.
 - **Scrub:** drag along the progress bar. The tonearm follows.
-- **Your own cover:** in the crate's Up next tab, click "+ Use your own cover".
 - **Crate (☰):**
   - **Up next:** tap a record to play it.
   - **Records:** pick a vinyl colour, or your own with the colour well under **Custom**.
