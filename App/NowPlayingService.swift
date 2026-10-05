@@ -47,6 +47,10 @@ final class NowPlayingService: PlaybackService {
     private var asking: Set<Source> = []
     private var lastPermissionCheck = Date.distantPast
     private var lastError: String?
+    /// A song id seen for the first time, and when. While another device controls Spotify over Connect,
+    /// the Mac app can flick between two songs for a moment; a change only counts once it holds.
+    private var candidateID: String?
+    private var candidateSince = Date.distantPast
 
     // MARK: Lifecycle
 
@@ -177,7 +181,13 @@ final class NowPlayingService: PlaybackService {
         needsPermission = false
         status = "Connected to \(s.displayName)."
 
+        if info.id == lastID { candidateID = nil }
         if info.id != lastID {
+            if connected {
+                if info.id != candidateID { candidateID = info.id; candidateSince = Date(); return }
+                guard Date().timeIntervalSince(candidateSince) >= 0.8 else { return }
+            }
+            candidateID = nil
             lastID = info.id
             let t = Track(title: info.title, artist: info.artist.isEmpty ? info.album : info.artist,
                           duration: max(1, info.duration), bpm: 100, tintHex: "#8a6a4a",

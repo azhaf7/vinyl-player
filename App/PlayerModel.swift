@@ -81,6 +81,10 @@ final class PlayerModel {
     @ObservationIgnored private var lastSave = Date()
     @ObservationIgnored private var remotePlaying: Bool?
     @ObservationIgnored private var pendingRemoteIndex: Int?
+    /// The current play, pause or swap is following the music app (e.g. a phone controlling Spotify
+    /// over Connect). The turntable then only animates: echoing the command back would pull playback
+    /// onto this Mac and start a swap loop.
+    @ObservationIgnored private var pRemote = false
 
     // Pet
     private enum Mode { case home, walk, hopDown, grab, hopUp, back, swap }
@@ -246,7 +250,7 @@ final class PlayerModel {
     private func clearTimers() { timers.forEach { $0.cancel() }; timers.removeAll() }
 
     /// `quick` is used after a record swap, so a song change doesn't drag.
-    private func doPlay(quick: Bool = false) {
+    private func doPlay(quick: Bool = false, send: Bool = true) {
         clearTimers()
         playing = true; armOver = true
         stateChanged()
@@ -255,18 +259,18 @@ final class PlayerModel {
             guard let self else { return }
             self.motor = true
             self.remotePlaying = true
-            self.service.play()
+            if send { self.service.play() }
             if !(self.isLive && self.track.sourceID == nil) {
                 HistoryStore.shared.record(self.track, source: self.service.name)
             }
         }
     }
 
-    private func doPause() {
+    private func doPause(send: Bool = true) {
         clearTimers()
         playing = false; motor = false
         remotePlaying = false
-        service.pause()
+        if send { service.pause() }
         stateChanged()
         later(420) { [weak self] in self?.armLow = false }
         later(820) { [weak self] in self?.armOver = false }
@@ -274,10 +278,11 @@ final class PlayerModel {
 
     private var petPerforms: Bool { prefs.showPet && prefs.petOperatesArm && !reduced }
 
-    func toggle() {
+    func toggle(fromRemote: Bool = false) {
         guard !busy else { return }
         let action: Action = playing ? .pause : .play
-        guard petPerforms else { return action == .play ? doPlay() : doPause() }
+        guard petPerforms else { return action == .play ? doPlay(send: !fromRemote) : doPause(send: !fromRemote) }
+        pRemote = fromRemote
         busy = true
         pAction = action
         stateChanged()
@@ -297,9 +302,10 @@ final class PlayerModel {
         swapTo((index + dir + tracks.count) % tracks.count)
     }
 
-    func swapTo(_ i: Int) {
+    func swapTo(_ i: Int, fromRemote: Bool = false) {
         guard !busy, i != index else { return }
-        guard petPerforms else { return pick(i) }
+        guard petPerforms else { return pick(i, send: !fromRemote) }
+        pRemote = fromRemote
         pAction = .swap; pTarget = i
         pFlip = !isLive && index / 3 != i / 3 && abs(i - index) == 1
         pWasPlaying = playing; pSwapped = false
@@ -313,9 +319,9 @@ final class PlayerModel {
         go(.walk, Pt(x: pX, y: Self.HOME.y), Self.SWAP, max(150, abs(Self.SWAP.x - pX) / Self.swapWalkSpeed))
     }
 
-    private func pick(_ i: Int) {
+    private func pick(_ i: Int, send: Bool = true) {
         position = 0; index = i; elapsedSec = 0
-        service.select(index: i)
+        if send { service.select(index: i) }
         save(); stateChanged()
         if playing && armLow {
             armLow = false
@@ -370,10 +376,10 @@ final class PlayerModel {
             save(); stateChanged()
         case .track(let i):
             tracksVersion += 1
-            if busy { pendingRemoteIndex = i } else if i != index { swapTo(i) }
+            if busy { pendingRemoteIndex = i } else if i != index { swapTo(i, fromRemote: true) }
         case .playing(let p):
             remotePlaying = p
-            if !busy && p != pendingPlaying { toggle() }
+            if !busy && p != pendingPlaying { toggle(fromRemote: true) }
         case .position(let s):
             // Ignore while a record swap is in progress; small differences are just clock drift.
             guard pAction != .swap, pendingRemoteIndex == nil, abs(s - position) > 1 else { return }
@@ -386,9 +392,9 @@ final class PlayerModel {
     private func reconcile() {
         if let i = pendingRemoteIndex {
             pendingRemoteIndex = nil
-            if i != index { swapTo(i); return }
+            if i != index { swapTo(i, fromRemote: true); return }
         }
-        if let p = remotePlaying, p != playing { toggle() }
+        if let p = remotePlaying, p != playing { toggle(fromRemote: true) }
     }
 
     /// Switch music source (e.g. to Spotify once signed in).
@@ -436,7 +442,7 @@ final class PlayerModel {
             if u >= 1 && !pSwapped {
                 pSwapped = true
                 position = 0; index = pTarget; elapsedSec = 0
-                service.select(index: pTarget)
+                if !pRemote { service.select(index: pTarget) }
                 save(); stateChanged()
             }
             let yOut = u * u * (3 - 2 * u), yIn = 1 - pow(1 - v, 3)
@@ -446,7 +452,7 @@ final class PlayerModel {
             liftY = (u > 0 && u < 1 ? sin(u * PI) * 5 : 0) + (v > 0 && v < 1 ? sin(v * PI) * 3 : 0)
             if v >= 1 {
                 recY = 0; recZ = 0; recFlip = 0
-                if pWasPlaying { doPlay(quick: true) }
+                if pWasPlaying { doPlay(quick: true, send: !pRemote) }
                 go(.back, Pt(x: pX, y: pY), Self.HOME, max(150, abs(pX - Self.HOME.x) / Self.swapWalkSpeed))
             }
         case .grab:
@@ -471,7 +477,7 @@ final class PlayerModel {
                     if pAction == .swap { pMode = .swap; pT = 0; pFace = 1 } else { go(.hopDown, Self.EDGE, Self.SPOT, 460) }
                 case .hopDown:
                     pMode = .grab; pT = 0; pFace = 1
-                    if pAction == .play { doPlay() } else { doPause() }
+                    if pAction == .play { doPlay(send: !pRemote) } else { doPause(send: !pRemote) }
                 case .hopUp:
                     go(.back, Pt(x: pX, y: pY), Self.HOME, max(200, abs(pX - Self.HOME.x) / 0.17))
                 case .back:
