@@ -1,0 +1,78 @@
+name: Test sharing backend
+
+# Exercises the Supabase project the way the app does: two anonymous accounts with friend codes,
+# a friendship, a sent record, opening it, "listening together", and the security rules.
+# Leaves two test profiles named citest_… behind (accounts can only be removed from the dashboard).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['App/Social/**', 'supabase/**', '.github/workflows/backend-test.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read config from the app
+        run: |
+          URL=$(grep -o 'supabaseURL = "[^"]*"' App/Social/SocialConfig.swift | cut -d'"' -f2)
+          KEY=$(grep -o 'anonKey = "[^"]*"' App/Social/SocialConfig.swift | cut -d'"' -f2)
+          test -n "$URL" && test -n "$KEY"
+          echo "URL=$URL" >> "$GITHUB_ENV"
+          echo "KEY=$KEY" >> "$GITHUB_ENV"
+      - name: Run the sharing flow
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          api() { # method path token [json]
+            curl -sS -X "$1" "$URL$2" -H "apikey: $KEY" -H "Authorization: Bearer $3" \
+              -H "Content-Type: application/json" -H "Prefer: return=representation" ${4:+-d "$4"} -w '\n%{http_code}'
+          }
+          code() { tail -n1 <<<"$1"; }
+          body() { sed '$d' <<<"$1"; }
+
+          signup() { curl -sS -X POST "$URL/auth/v1/signup" -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}'; }
+          A=$(signup); TA=$(jq -r .access_token <<<"$A"); IA=$(jq -r .user.id <<<"$A")
+          B=$(signup); TB=$(jq -r .access_token <<<"$B"); IB=$(jq -r .user.id <<<"$B")
+          [ "$TA" != null ] && [ "$TB" != null ] || fail "Anonymous sign-up failed: $A"
+          echo "✓ anonymous sign-up (friend-code accounts)"
+
+          N=$RANDOM
+          r=$(api POST /rest/v1/profiles "$TA" "{\"id\":\"$IA\",\"username\":\"citest_${N}a\",\"pet\":\"Mochi\"}"); [ "$(code "$r")" = 201 ] || fail "Create profile A: $r"
+          r=$(api POST /rest/v1/profiles "$TB" "{\"id\":\"$IB\",\"username\":\"citest_${N}b\",\"pet\":\"Bao\"}"); [ "$(code "$r")" = 201 ] || fail "Create profile B: $r"
+          echo "✓ friend codes created"
+
+          r=$(api POST /rest/v1/profiles "$TA" "{\"id\":\"$IB\",\"username\":\"citest_${N}x\"}"); [ "$(code "$r")" != 201 ] || fail "A could create a profile for B"
+          echo "✓ can't create someone else's profile"
+
+          r=$(api GET "/rest/v1/profiles?username=eq.citest_${N}b&select=id,username" "$TA"); [ "$(body "$r" | jq length)" = 1 ] || fail "Find B by code: $r"
+          r=$(api POST /rest/v1/friendships "$TA" "{\"user_id\":\"$IA\",\"friend_id\":\"$IB\"}"); [ "$(code "$r")" = 201 ] || fail "Add friend: $r"
+          r=$(api GET "/rest/v1/friendships?or=(user_id.eq.$IB,friend_id.eq.$IB)&select=user:profiles!friendships_user_id_fkey(username)" "$TB")
+          [ "$(body "$r" | jq -r '.[0].user.username')" = "citest_${N}a" ] || fail "B sees A as a friend: $r"
+          echo "✓ add friend by code; both sides see it"
+
+          r=$(api POST /rest/v1/shares "$TA" "{\"recipient_id\":\"$IB\",\"title\":\"Dreams\",\"artist\":\"Fleetwood Mac\",\"message\":\"test\",\"pet\":\"Mochi\"}")
+          [ "$(code "$r")" = 201 ] || fail "Send record: $r"; SID=$(body "$r" | jq -r '.[0].id')
+          r=$(api POST /rest/v1/shares "$TA" "{\"sender_id\":\"$IB\",\"recipient_id\":\"$IA\",\"title\":\"x\",\"artist\":\"x\"}"); [ "$(code "$r")" != 201 ] || fail "A could send as B"
+          echo "✓ send a record; can't send as someone else"
+
+          r=$(api GET "/rest/v1/shares?recipient_id=eq.$IB&select=title,sender:profiles!shares_sender_id_fkey(username)" "$TB")
+          [ "$(body "$r" | jq -r '.[0].sender.username')" = "citest_${N}a" ] || fail "B's inbox: $r"
+          r=$(api GET "/rest/v1/shares?id=eq.$SID" "$KEY"); [ "$(body "$r" | jq length 2>/dev/null || echo 0)" = 0 ] || fail "Signed-out read of a record: $r"
+          echo "✓ record arrives in the inbox; not readable when signed out"
+
+          r=$(api PATCH "/rest/v1/shares?id=eq.$SID" "$TB" '{"opened_at":"2026-01-01T00:00:00Z"}'); [ "$(code "$r")" = 200 ] || fail "Open record: $r"
+          r=$(api PATCH "/rest/v1/shares?id=eq.$SID" "$TB" '{"title":"changed"}'); [ "$(code "$r")" != 200 ] || [ "$(body "$r" | jq -r '.[0].title // empty')" != changed ] || fail "Recipient could change the record"
+          echo "✓ opening works; records can't be edited"
+
+          r=$(api PATCH "/rest/v1/profiles?id=eq.$IA" "$TA" '{"now_title":"Dreams","now_artist":"Fleetwood Mac","now_playing":true,"now_updated_at":"2026-01-01T00:00:00Z"}'); [ "$(code "$r")" = 200 ] || fail "Now playing: $r"
+          r=$(api GET "/rest/v1/profiles?id=eq.$IA&select=now_title" "$TB"); [ "$(body "$r" | jq -r '.[0].now_title')" = Dreams ] || fail "Friend sees now playing: $r"
+          r=$(api PATCH "/rest/v1/profiles?id=eq.$IA" "$TB" '{"username":"hacked"}'); [ "$(body "$r" | jq length)" = 0 ] || fail "B could edit A's profile"
+          echo "✓ listening together; can't edit someone else's profile"
+
+          api DELETE "/rest/v1/shares?id=eq.$SID" "$TA" >/dev/null
+          api DELETE "/rest/v1/friendships?user_id=eq.$IA" "$TA" >/dev/null
+          echo "✓ cleaned up (test profiles citest_${N}a / citest_${N}b remain)"
+          echo "All sharing checks passed."
