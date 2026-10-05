@@ -1,0 +1,4 @@
+{
+  "cleanUrls": true,
+  "redirects": [{ "source": "/", "destination": "/shared-record/", "permanent": false }]
+}

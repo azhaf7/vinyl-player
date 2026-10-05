@@ -15,21 +15,23 @@ What's included:
 - **Widgets:** small, medium and large widgets for the desktop and Notification Center. They show the cover, song and pet, and have working play/pause and skip buttons.
 - **Menu bar app:** a record icon in the menu bar with controls and settings. There's no Dock icon.
 
-It uses six sample songs for now. Spotify sign-in is the next step.
+It follows what's playing in the **Spotify** or **Music** app on your Mac (no sign-in needed), or plays six built-in sample songs.
 
-## Install the test build (no Xcode)
+## Install
 
-Every change pushed to `main` is built automatically on GitHub, and the result is published as **[VinylPlayer.zip](https://github.com/azhaf7/vinyl-player/releases/download/latest/VinylPlayer.zip)** (also listed under **Releases → latest**).
+Every change pushed to `main` is built automatically on GitHub and published as **[VinylPlayer.dmg](https://github.com/azhaf7/vinyl-player/releases/download/latest/VinylPlayer.dmg)** (also under **Releases → latest**).
 
-1. Download **VinylPlayer.zip** and double-click it to unzip.
-2. Drag **Vinyl Player** into your **Applications** folder.
-3. Double-click it. The build isn't signed with an Apple ID, so macOS blocks it the first time:
-   - **macOS 15 or later:** click **Done**, open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to "Vinyl Player". Then confirm.
-   - **macOS 14:** right-click the app, choose **Open**, then **Open** again.
+1. Download **VinylPlayer.dmg** and open it.
+2. Drag **Vinyl Player** onto the **Applications** folder in the window.
+3. The app isn't notarized by Apple yet, so macOS blocks it the first time. Open **Terminal** and run:
+   ```
+   xattr -dr com.apple.quarantine "/Applications/Vinyl Player.app"
+   ```
+   Or try to open it once, click **Done**, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
+4. Open **Vinyl Player**. The turntable appears at the top right of the desktop, and a record icon appears in the menu bar.
+5. Play a song in Spotify or Apple Music. The first time, macOS asks to let Vinyl Player control the app: click **OK**.
 
-The turntable appears at the top right of the desktop, and a record icon appears in the menu bar.
-
-The test build has the full desktop player and pet. The **widgets need the signed version** you build with Xcode (below), because macOS only loads widgets from apps signed with an Apple ID.
+The downloaded build has the full desktop player and pet. The **widgets need a signed build**, either one you build with Xcode (below) or a notarized release, because macOS only loads widgets from signed apps.
 
 ## Build it yourself with Xcode
 
@@ -66,8 +68,11 @@ The app needs to have run at least once first.
 
 ## Using it
 
+- **Music:** by default it follows the Spotify or Music app. Play, pause and skip on the turntable control that app, and changes made in the app show up on the turntable. Switch to the sample songs under **Music** in the menu bar menu.
+  - If the song doesn't appear, the line under the title says why.
+  - If it says **Click to allow access**, click it and turn on Vinyl Player under **Automation**.
 - **Play / pause:** the white button, a click on the record, or the menu bar menu. The pet walks over and works the tonearm.
-- **Skip:** the back and next buttons. The pet lifts the record out and drops in the next one. Going between song 3 and song 4 flips the record from side A to side B.
+- **Skip:** the back and next buttons. The pet lifts the record out and drops in the next one. With the sample songs, going between song 3 and song 4 flips the record from side A to side B.
 - **Scrub:** drag along the progress bar. The tonearm follows.
 - **Your own cover:** click the small cover next to the song title.
 - **Crate (☰):**
@@ -76,13 +81,26 @@ The app needs to have run at least once first.
   - **Pets:** pick Mochi, Bao, Pip or Tofu. Headphones unlock after a while of listening.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
-- **Move the player:** drag it by an empty part of the card.
+- **Move the player:** drag it from anywhere: the record, the pet or the buttons. A click still works as a click; only an actual drag moves it.
 - **Menu bar → Float Above Windows:** keeps it on top instead of on the desktop.
 - **Menu bar → Move Player to Top Right:** brings it back if it gets lost.
 
 ## Sharing records
 
-The share link opens `web/shared-record/`, a small web page that people without the app can open. Host the `web/` folder somewhere public, then paste the page's address into **Settings… → Sharing**.
+The share link opens `web/shared-record/`, a small web page that people without the app can open.
+
+### Host it on Vercel (free, works with a private repo)
+
+1. Sign in at [vercel.com](https://vercel.com) with GitHub, then choose **Add New → Project** and import **vinyl-player**.
+2. Set **Root Directory** to `web`, leave **Framework Preset** on **Other**, and click **Deploy**.
+3. Copy the address Vercel gives you (e.g. `https://vinyl-player-xyz.vercel.app`).
+4. In the app, open **Settings… → Sharing** and paste the address followed by `/shared-record/`. For example: `https://vinyl-player-xyz.vercel.app/shared-record/`.
+
+Vercel redeploys automatically whenever `web/` changes.
+
+### Other hosts
+
+Any static host works: upload the `web/` folder and paste the page's address into **Settings… → Sharing**.
 
 [Netlify Drop](https://app.netlify.com/drop) works: drag the `web` folder onto it. GitHub Pages also works if the repository is public.
 

@@ -29,15 +29,42 @@ jobs:
         if: failure()
         run: grep -E "error:" build.log | sort -u | head -100
 
-      - name: Package
+      - name: Package zip
         run: |
           cd build/Release
           ditto -c -k --keepParent "Vinyl Player.app" "$GITHUB_WORKSPACE/VinylPlayer.zip"
 
+      - name: Package dmg
+        run: |
+          brew install create-dmg >/dev/null
+          mkdir -p dmg && cp -R "build/Release/Vinyl Player.app" dmg/
+          tiffutil -cathidpicheck Config/dmg-background.png Config/dmg-background@2x.png -out dmg-background.tiff
+          # Finder layout via AppleScript can be flaky on CI runners: retry, then fall back to a plain dmg.
+          for i in 1 2 3; do
+            rm -f VinylPlayer.dmg
+            create-dmg \
+              --volname "Vinyl Player" \
+              --volicon "build/Release/Vinyl Player.app/Contents/Resources/AppIcon.icns" \
+              --background dmg-background.tiff \
+              --window-pos 200 120 --window-size 600 400 \
+              --icon-size 112 --text-size 13 \
+              --icon "Vinyl Player.app" 150 200 --hide-extension "Vinyl Player.app" \
+              --app-drop-link 450 200 \
+              VinylPlayer.dmg dmg/ && break
+            sleep 5
+          done
+          if [ ! -f VinylPlayer.dmg ]; then
+            ln -s /Applications dmg/Applications
+            hdiutil create -volname "Vinyl Player" -srcfolder dmg -ov -format UDZO VinylPlayer.dmg
+          fi
+          ls -la VinylPlayer.dmg
+
       - uses: actions/upload-artifact@v4
         with:
           name: VinylPlayer
-          path: VinylPlayer.zip
+          path: |
+            VinylPlayer.dmg
+            VinylPlayer.zip
 
       - name: Publish download
         if: github.ref == 'refs/heads/main'
@@ -45,6 +72,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest VinylPlayer.zip --prerelease --target "$GITHUB_SHA" \
+          gh release create latest VinylPlayer.dmg VinylPlayer.zip --prerelease --target "$GITHUB_SHA" \
             --title "Vinyl Player (latest build)" \
-            --notes "Unsigned test build of the latest commit. See README → Install the test build."
+            --notes "Latest build. Download VinylPlayer.dmg, open it and drag Vinyl Player into Applications. See README → Install."

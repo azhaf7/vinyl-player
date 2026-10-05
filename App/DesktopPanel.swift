@@ -19,6 +19,55 @@ final class DesktopPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
+    // MARK: Drag from anywhere
+
+    /// Areas (content coordinates, y down) where a drag keeps its own meaning, e.g. scrubbing.
+    var noDragRects: [CGRect] = []
+
+    private var dragDown: NSEvent?
+    private var dragMouse = NSPoint.zero
+    private var dragOrigin = NSPoint.zero
+    private var moving = false
+
+    /// A press that moves more than a few points moves the window, wherever it started.
+    /// A press that doesn't move stays a normal click (play, buttons, the pet...).
+    override func sendEvent(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown:
+            moving = false
+            let p = contentView.map { $0.convert(event.locationInWindow, from: nil) } ?? event.locationInWindow
+            dragDown = noDragRects.contains(where: { $0.contains(p) }) ? nil : event
+            dragMouse = NSEvent.mouseLocation
+            dragOrigin = frame.origin
+            super.sendEvent(event)
+        case .leftMouseDragged:
+            if let down = dragDown {
+                let m = NSEvent.mouseLocation
+                let dx = m.x - dragMouse.x, dy = m.y - dragMouse.y
+                if !moving && hypot(dx, dy) > 4 {
+                    moving = true
+                    // Cancel whatever the press started (a tap, a button) with a release far outside.
+                    if let cancel = NSEvent.mouseEvent(with: .leftMouseUp, location: NSPoint(x: -10_000, y: -10_000),
+                                                       modifierFlags: [], timestamp: event.timestamp, windowNumber: windowNumber,
+                                                       context: nil, eventNumber: down.eventNumber, clickCount: 1, pressure: 0) {
+                        super.sendEvent(cancel)
+                    }
+                }
+                if moving {
+                    setFrameOrigin(NSPoint(x: dragOrigin.x + dx, y: dragOrigin.y + dy))
+                    return
+                }
+            }
+            super.sendEvent(event)
+        case .leftMouseUp:
+            dragDown = nil
+            if moving { moving = false; return }
+            super.sendEvent(event)
+        default:
+            super.sendEvent(event)
+        }
+    }
+
     func applyLevel(floating: Bool) {
         level = floating ? .floating : NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
     }
@@ -72,6 +121,8 @@ final class DesktopPanelController: NSObject, NSWindowDelegate {
         p.contentView = host
         p.delegate = self
         p.applyLevel(floating: Preferences.shared.floatAboveWindows)
+        // The progress bar (card x 22, y 302, 300 × 18) keeps dragging for scrubbing.
+        p.noDragRects = [CGRect(x: Self.margin + 18, y: Self.margin + 58 + 296, width: 308, height: 30)]
         panel = p
         if let saved = UserDefaults.standard.string(forKey: "panelOrigin") {
             p.setFrameOrigin(NSPointFromString(saved))
@@ -169,13 +220,3 @@ struct VisualEffectBlur: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
-/// Drag the window by the card's background.
-struct WindowDragArea: NSViewRepresentable {
-    final class DragView: NSView {
-        override func mouseDown(with event: NSEvent) { window?.performDrag(with: event) }
-        override var mouseDownCanMoveWindow: Bool { true }
-    }
-
-    func makeNSView(context: Context) -> NSView { DragView() }
-    func updateNSView(_ nsView: NSView, context: Context) {}
-}

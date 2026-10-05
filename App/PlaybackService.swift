@@ -9,8 +9,11 @@ protocol PlaybackService: AnyObject {
     /// True when the music comes from another app: it owns the queue, so next / previous are sent to it
     /// and the record is swapped when it reports the new song.
     var isLive: Bool { get }
-    /// Short line for Settings, e.g. "Connected to Spotify".
+    /// Short line for Settings and the player, e.g. "Connected to Spotify".
     var status: String { get }
+    /// True when macOS hasn't allowed us to read the music app yet.
+    var needsPermission: Bool { get }
+    func openPermissionSettings()
     func play()
     func pause()
     func nextTrack()
@@ -31,6 +34,8 @@ enum RemoteChange {
     case position(Double)
     /// The track list was replaced (first contact with the source): jump to `index` without animating.
     case reset(index: Int)
+    /// `status` or `needsPermission` changed.
+    case status
 }
 
 /// Six built-in songs; time is simulated by the player.
@@ -39,6 +44,8 @@ final class MockPlaybackService: PlaybackService {
     let tracks = Catalog.tracks
     let isLive = false
     let status = "Playing the six built-in sample songs."
+    let needsPermission = false
+    func openPermissionSettings() {}
     var onRemoteChange: ((RemoteChange) -> Void)?
 
     func play() {}

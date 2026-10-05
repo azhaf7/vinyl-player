@@ -35,6 +35,8 @@ final class PlayerModel {
     private(set) var elapsedSec = 0
     /// Bumped when the music source's track list changes.
     private(set) var tracksVersion = 0
+    /// Bumped when the music source's status line changes.
+    private(set) var statusVersion = 0
 
     // MARK: Per-frame output
     private(set) var discAngle = 0.0
@@ -132,6 +134,10 @@ final class PlayerModel {
     var tracks: [Track] { _ = tracksVersion; return service.tracks }
     var track: Track { let t = tracks; return t.indices.contains(index) ? t[index] : t[t.count - 1] }
     var isLive: Bool { service.isLive }
+    var serviceStatus: String { _ = statusVersion; return service.status }
+    var needsPermission: Bool { _ = statusVersion; return service.needsPermission }
+    /// Live source but nothing playing yet: show the status line instead of an artist.
+    var showsStatus: Bool { _ = statusVersion; return isLive && (service.needsPermission || track.sourceID == nil) }
     var side: String { isLive ? "A" : Catalog.side(of: index) }
     var duration: Double { track.duration }
     var pendingPlaying: Bool {
@@ -320,6 +326,8 @@ final class PlayerModel {
     /// Apply a change that came from the music source rather than from a click here.
     func apply(_ change: RemoteChange) {
         switch change {
+        case .status:
+            statusVersion += 1
         case .reset(let i):
             tracksVersion += 1
             clearTimers()

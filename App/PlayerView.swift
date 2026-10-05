@@ -80,7 +80,7 @@ private struct PlayerCard: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            WindowDragArea()
+            Color.clear
             // Tint glow: radial at top centre, 22% (dark) / 19% (light), fading by 70%.
             Rectangle()
                 .fill(RadialGradient(colors: [tint.opacity(ink.dark ? 0.22 : 0.19).color, .clear], center: .top, startRadius: 0, endRadius: 269 * 0.7))
@@ -159,9 +159,22 @@ private struct InfoRow: View {
                 Text(model.track.title)
                     .font(.system(size: 13, weight: .semibold)).tracking(-0.13)
                     .foregroundStyle(ink.ink)
-                Text(model.track.artist + " · Side " + model.side)
-                    .font(.system(size: 12))
-                    .foregroundStyle(ink.ink2)
+                if model.needsPermission {
+                    Text("Click to allow access to your music app")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Tokens.accent.color)
+                        .onTapGesture { model.service.openPermissionSettings() }
+                        .help(model.serviceStatus)
+                } else if model.showsStatus {
+                    Text(model.serviceStatus)
+                        .font(.system(size: 12))
+                        .foregroundStyle(ink.ink2)
+                        .help(model.serviceStatus)
+                } else {
+                    Text(model.track.artist + " · Side " + model.side)
+                        .font(.system(size: 12))
+                        .foregroundStyle(ink.ink2)
+                }
             }
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
