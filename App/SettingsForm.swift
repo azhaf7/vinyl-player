@@ -50,6 +50,7 @@ struct SettingsForm: View {
             }
 
             Section("Pet") {
+                Toggle("Show the pet", isOn: $prefs.showPet)
                 Picker("Pet", selection: Binding(get: { model.pet }, set: { model.selectPet($0) })) {
                     ForEach(Array(PetSpec.all.enumerated()), id: \.offset) { i, p in Text(p.name).tag(i) }
                 }

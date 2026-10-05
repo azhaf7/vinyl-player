@@ -27,6 +27,7 @@ struct WidgetSnapshot: Codable, Equatable {
     var live: Bool? = nil
     var sunglasses: Bool? = nil
     var style: PlayerStyle? = nil
+    var hidePet: Bool? = nil
 
     var tint: RGB { RGB(hex: tintHex) }
 

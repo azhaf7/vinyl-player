@@ -153,8 +153,17 @@ struct NotchView: View {
                         .frame(width: NotchState.wing, alignment: .center)
                         .opacity(state.expanded ? 0 : 1)
                     Spacer(minLength: state.notchWidth)
-                    NotchPet(model: model, maxHeight: state.notchHeight - 4)
-                        .frame(width: NotchState.wing, alignment: .center)
+                    Group {
+                        if prefs.showPet {
+                            NotchPet(model: model, maxHeight: state.notchHeight - 4)
+                        } else {
+                            Image(systemName: model.pendingPlaying ? "waveform" : "pause.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .symbolEffect(.variableColor.iterative, isActive: model.pendingPlaying)
+                        }
+                    }
+                    .frame(width: NotchState.wing, alignment: .center)
                 }
                 .frame(width: size.width, height: state.notchHeight)
 

@@ -56,6 +56,7 @@ final class Preferences: ObservableObject {
     @Published var didOnboard: Bool { didSet { d.set(didOnboard, forKey: "didOnboard") } }
     @Published var shareListening: Bool { didSet { d.set(shareListening, forKey: "shareListening") } }
     @Published var hotKeys: Bool { didSet { d.set(hotKeys, forKey: "hotKeys") } }
+    @Published var showPet: Bool { didSet { d.set(showPet, forKey: "showPet") } }
 
     /// Where the Shared Record page (web/shared-record) is hosted.
     static let defaultShareBaseURL = "https://azhaf7.github.io/vinyl-player/shared-record/"
@@ -76,6 +77,7 @@ final class Preferences: ObservableObject {
         didOnboard = d.bool(forKey: "didOnboard")
         shareListening = d.object(forKey: "shareListening") as? Bool ?? true
         hotKeys = d.object(forKey: "hotKeys") as? Bool ?? true
+        showPet = d.object(forKey: "showPet") as? Bool ?? true
         style = d.data(forKey: "playerStyle").flatMap { try? JSONDecoder().decode(PlayerStyle.self, from: $0) } ?? PlayerStyle()
     }
 

@@ -48,7 +48,7 @@ struct PlayerRoot: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
-            PetView(model: model)
+            if prefs.showPet { PetView(model: model) }
         }
         .frame(width: 344, alignment: .topLeading)
         .animation(.spring(response: 0.32, dampingFraction: 0.86), value: model.shareOpen)
@@ -112,6 +112,7 @@ private struct PlayerCard: View {
             Divider()
             Button("Library…") { LibraryWindowController.shared.show() }
             Button("Settings…") { LibraryWindowController.shared.show(.settings) }
+            Toggle("Show the Pet", isOn: Binding(get: { Preferences.shared.showPet }, set: { Preferences.shared.showPet = $0 }))
             Menu("Show As") {
                 ForEach(DisplayMode.allCases) { m in
                     Button(m.rawValue) { Preferences.shared.displayMode = m }

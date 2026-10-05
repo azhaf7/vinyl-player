@@ -169,6 +169,7 @@ private struct MenuContent: View {
             ForEach(MusicSource.allCases) { Text($0.rawValue).tag($0) }
         }
         Divider()
+        Toggle("Show the Pet", isOn: $prefs.showPet)
         Toggle("Pet Operates the Tonearm", isOn: $prefs.petOperatesArm)
         Toggle("Sound", isOn: $prefs.sound)
         Picker("Appearance", selection: $prefs.theme) {

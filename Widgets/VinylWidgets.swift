@@ -254,6 +254,7 @@ private struct SmallView: View {
                 .frame(width: 170 - 14 - 52, alignment: .leading)
                 .offset(x: 14, y: 170 - 12 - 30)
                 PetSprite(pet: s.petIndex, pose: petPose(entry), pixel: 2, tint: s.style?.pet)
+                    .opacity(s.hidePet == true ? 0 : 1)
                     .frame(width: 32, height: 36, alignment: .bottom)
                     .offset(x: 170 - 12 - 32, y: 170 - 12 - 36)
             }
@@ -324,6 +325,7 @@ private struct LargeView: View {
                     .offset(x: 334 - 20, y: 34)
                     .animation(.spring(duration: 0.7, bounce: 0.3), value: s.isPlaying)
                 PetSprite(pet: s.petIndex, pose: petPose(entry), pixel: 2, tint: s.style?.pet)
+                    .opacity(s.hidePet == true ? 0 : 1)
                     .frame(width: 32, height: 36, alignment: .bottom)
                     .offset(x: 312, y: 155)
 

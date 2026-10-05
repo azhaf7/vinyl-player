@@ -272,7 +272,7 @@ final class PlayerModel {
         later(820) { [weak self] in self?.armOver = false }
     }
 
-    private var petPerforms: Bool { prefs.petOperatesArm && !reduced }
+    private var petPerforms: Bool { prefs.showPet && prefs.petOperatesArm && !reduced }
 
     func toggle() {
         guard !busy else { return }
