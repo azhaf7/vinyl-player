@@ -192,7 +192,7 @@ private struct NotchRecord: View {
 
     var body: some View {
         MiniRecord(diameter: size, style: VinylStyle.resolve(model.vinyl, custom: style.vinyl), art: art, artIndex: model.index,
-                   artInset: size * 0.08, spindle: 2, sheen: false)
+                   artInset: LP.artInset(for: size), spindle: 2, sheen: false)
             .rotationEffect(.degrees(model.discAngle))
             .overlay(RecordSheen())
     }
@@ -224,9 +224,9 @@ private struct NotchDetails: View {
     var body: some View {
         let ink = Ink(dark: true)
         HStack(spacing: 16) {
-            // The record itself, big, with the album art on its label, spinning with the turntable.
+            // The record itself, big, with the album art on its real-size label, spinning with the turntable.
             MiniRecord(diameter: 116, style: VinylStyle.resolve(model.vinyl, custom: style.vinyl), art: art, artIndex: model.index,
-                       artInset: 8, ringWidth: 2, spindle: 5, sheen: false, ring: style.labelRing)
+                       artInset: LP.artInset(for: 116), ringWidth: 1.5, spindle: 3, sheen: false, ring: style.labelRing)
                 .rotationEffect(.degrees(model.discAngle))
                 .overlay(RecordSheen())
                 .shadow(color: tint.opacity(0.35).color, radius: 14)

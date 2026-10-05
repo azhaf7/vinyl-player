@@ -130,11 +130,10 @@ private struct WidgetRecord: View {
     let snap: WidgetSnapshot
     let item: WidgetSnapshot.Item
     let diameter: CGFloat
-    let artInset: CGFloat
 
     var body: some View {
         MiniRecord(diameter: diameter, style: VinylStyle.resolve(snap.vinylIndex, custom: snap.style?.vinyl), art: SharedStore.coverImage(item.coverFile),
-                   artIndex: item.index, artInset: artInset, ringWidth: 2, spindle: 6, sheen: false,
+                   artIndex: item.index, artInset: LP.artInset(for: diameter), ringWidth: 1.5, spindle: diameter * LP.spindle + 1, sheen: false,
                    ring: snap.style?.labelRing ?? Tokens.labelRing)
             .rotationEffect(.degrees(Double(item.index) * 37))
             .overlay(RecordSheen())
@@ -233,7 +232,7 @@ private struct SmallView: View {
         Fit(ref: CGSize(width: 170, height: 170)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 118, artInset: 9)
+                    WidgetRecord(snap: s, item: s.current, diameter: 118)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 12, y: 12)
@@ -272,7 +271,7 @@ private struct MediumView: View {
         Fit(ref: CGSize(width: 364, height: 170)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 138, artInset: 10)
+                    WidgetRecord(snap: s, item: s.current, diameter: 138)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 16, y: 16)
@@ -310,7 +309,7 @@ private struct LargeView: View {
         Fit(ref: CGSize(width: 364, height: 382)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 190, artInset: 13)
+                    WidgetRecord(snap: s, item: s.current, diameter: 190)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 84, y: 10)
@@ -371,7 +370,7 @@ private struct LargeView: View {
                         ForEach(s.upNext, id: \.index) { u in
                             HStack(spacing: 8) {
                                 MiniRecord(diameter: 40, style: VinylStyle.resolve(s.vinylIndex, custom: s.style?.vinyl), art: SharedStore.coverImage(u.coverFile),
-                                           artIndex: u.index, artInset: 4, sheen: false)
+                                           artIndex: u.index, artInset: LP.artInset(for: 40), sheen: false)
                                 Text(u.title)
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(look.ink2)

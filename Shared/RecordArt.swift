@@ -24,16 +24,42 @@ enum DiscImage {
         ctx.addEllipse(in: disc(R)); ctx.clip()
         ctx.setFillColor(style.base.cgColor); ctx.fill(disc(R))
 
-        // Grooves: repeating radial ridge every 2.3 pt.
-        ctx.setStrokeColor(style.ridge.opacity(0.85).cgColor)
-        ctx.setLineWidth(0.8)
-        var r: CGFloat = 1.5
-        while r < R {
-            ctx.strokeEllipse(in: disc(r)); r += 2.3
-        }
+        // Real LP layout, from the centre out: paper label, a smooth glossy run-out (dead wax),
+        // the grooves with short silent gaps between songs, and a plain lead-in at the rim.
+        let labelR = R * LP.labelFraction(for: diameter)
+        let grooveStart = min(R * 0.9, labelR + R * (LP.runOut - LP.label))
+        let grooveEnd = R - max(1.5, R * 0.03)
+        let pitch: CGFloat = diameter >= 120 ? 0.9 : 1.4
 
-        // Four light wedges (repeating conic from 10°: light 0–45°, clear 45–90°).
-        ctx.setFillColor(RGB.whiteAlpha(0.05).cgColor)
+        // Run-out: smoother and a touch glossier than the grooves, with the lock groove near the label.
+        ctx.setFillColor(RGB.whiteAlpha(0.025).cgColor); ctx.fillEllipse(in: disc(grooveStart))
+        ctx.setStrokeColor(style.ridge.opacity(0.9).cgColor); ctx.setLineWidth(0.7)
+        ctx.strokeEllipse(in: disc(labelR + (grooveStart - labelR) * 0.35))
+        ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(0.5)
+        ctx.strokeEllipse(in: disc(grooveStart - 0.8))
+
+        // Grooves: fine rings whose depth swells and fades like the music cut into them.
+        var r = grooveStart, n = 0.0
+        while r < grooveEnd {
+            let loud = 0.6 + 0.22 * sin(Double(r) * 1.37) * sin(Double(r) * 0.23 + 1.1) + 0.12 * sin(n * 2.1)
+            ctx.setStrokeColor(style.ridge.opacity(min(1, max(0.25, loud))).cgColor)
+            ctx.setLineWidth(pitch * 0.62)
+            ctx.strokeEllipse(in: disc(r))
+            r += pitch; n += 1
+        }
+        // Gaps between songs: smooth bands that catch a little more light.
+        let gaps: [CGFloat] = detailed ? [0.18, 0.39, 0.57, 0.78] : (diameter >= 56 ? [0.45] : [])
+        for g in gaps {
+            let gr = grooveStart + g * (grooveEnd - grooveStart)
+            ctx.setStrokeColor(style.base.cgColor); ctx.setLineWidth(pitch * 2.4); ctx.strokeEllipse(in: disc(gr))
+            ctx.setStrokeColor(RGB.whiteAlpha(0.09).cgColor); ctx.setLineWidth(pitch * 1.1); ctx.strokeEllipse(in: disc(gr))
+        }
+        // Lead-in: a plain band at the rim with a bevelled edge.
+        ctx.setStrokeColor(style.base.cgColor); ctx.setLineWidth(R - grooveEnd); ctx.strokeEllipse(in: disc((R + grooveEnd) / 2))
+        ctx.setStrokeColor(RGB.whiteAlpha(0.07).cgColor); ctx.setLineWidth(0.8); ctx.strokeEllipse(in: disc(R - 0.6))
+
+        // Four soft light wedges (repeating conic from 10°: light 0–45°, clear 45–90°).
+        ctx.setFillColor(RGB.whiteAlpha(0.035).cgColor)
         for i in 0..<4 {
             let a0 = (10 + Double(i) * 90 - 90) * .pi / 180, a1 = a0 + .pi / 4
             ctx.move(to: c)
@@ -42,26 +68,30 @@ enum DiscImage {
         }
 
         if detailed {
-            let k = diameter / 248 // the design's measurements are for the 248 pt deck record
-            func grooveBand(_ inset: CGFloat, dark: Double, lightWidth: CGFloat, light: Double) {
-                let rr = R - inset * k
-                if light > 0 {
-                    ctx.setStrokeColor(RGB.whiteAlpha(light).cgColor); ctx.setLineWidth(lightWidth * 2)
-                    ctx.strokeEllipse(in: disc(rr))
-                }
-                if dark > 0 {
-                    ctx.setStrokeColor(RGB.blackAlpha(dark).cgColor); ctx.setLineWidth(2)
-                    ctx.strokeEllipse(in: disc(rr))
-                }
-            }
-            grooveBand(4, dark: 0, lightWidth: 1, light: 0.03)
-            ctx.setFillColor(ring.cgColor); ctx.fillEllipse(in: disc(R - 15 * k))
-            ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(1); ctx.strokeEllipse(in: disc(R - 15 * k + 0.5))
-            ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(R - 17 * k))
+            // A thin paper edge just outside the printed label.
+            ctx.setFillColor(ring.cgColor); ctx.fillEllipse(in: disc(labelR + max(1, R * 0.012)))
+            ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(labelR))
         }
         let img = ctx.makeImage()
         cache[key] = img
         return img
+    }
+}
+
+/// Real 12-inch LP proportions: the paper label is about a third of the record (100 mm on 301 mm), with
+/// the smooth run-out around it before the grooves start. The label here is a touch larger so the cover
+/// still reads; small thumbnails get a bigger label so the art stays recognisable.
+enum LP {
+    static let label: CGFloat = 0.36
+    static let runOut: CGFloat = 0.43
+    static let spindle: CGFloat = 0.024
+
+    static func labelFraction(for diameter: CGFloat) -> CGFloat {
+        diameter >= 90 ? label : diameter >= 56 ? 0.44 : 0.56
+    }
+    /// How far the label art sits in from the record's edge.
+    static func artInset(for diameter: CGFloat) -> CGFloat {
+        diameter * (1 - labelFraction(for: diameter)) / 2
     }
 }
 

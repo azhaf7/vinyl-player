@@ -422,7 +422,7 @@ private struct FriendsView: View {
                                 Text(f.name).font(.headline)
                                 if f.isListening, let t = f.nowTrack {
                                     HStack(spacing: 6) {
-                                        MiniRecord(diameter: 16, style: VinylStyle.at(0), art: ArtworkService.shared.image(for: t), artIndex: 0, artInset: 3, sheen: false)
+                                        MiniRecord(diameter: 16, style: VinylStyle.at(0), art: ArtworkService.shared.image(for: t), artIndex: 0, artInset: LP.artInset(for: 16), sheen: false)
                                         Text("Spinning " + t.title + " — " + t.artist).foregroundStyle(.secondary)
                                     }
                                     .lineLimit(1)

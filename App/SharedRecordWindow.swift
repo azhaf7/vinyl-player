@@ -144,8 +144,8 @@ struct SharedRecordView: View {
         let disc = w * 0.54, sleeve = w * 0.57
         return ZStack(alignment: .topLeading) {
             TimelineView(.animation(paused: openedAt == nil)) { ctx in
-                MiniRecord(diameter: disc, style: VinylStyle.at(0), art: art, artIndex: 0, artInset: disc * 0.21,
-                           ringWidth: disc * 0.015, spindle: disc * 0.03, sheen: false)
+                MiniRecord(diameter: disc, style: VinylStyle.at(0), art: art, artIndex: 0, artInset: LP.artInset(for: disc),
+                           ringWidth: disc * 0.012, spindle: disc * LP.spindle, sheen: false)
                     .rotationEffect(.degrees(spinAngle(at: ctx.date)))
                     .overlay(RecordSheen())
                     .shadow(color: .black.opacity(0.55), radius: 20, x: 10, y: 18)

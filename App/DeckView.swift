@@ -192,23 +192,25 @@ private struct SpinningSurface: View {
             if let img = DiscImage.make(style: style, diameter: 248, detailed: true, ring: ring) {
                 Image(decorative: img, scale: 2).resizable()
             }
-            // The album art fills nearly the whole record (Ø212), leaving a thin ring of grooves.
+            // The album art printed on a real-size paper label (about a third of the record).
+            let label = 248 * LP.label
             CoverArt(image: art, index: artIndex)
-                .frame(width: 212, height: 212)
+                .frame(width: label, height: label)
                 .clipShape(Circle())
                 .overlay(
                     ZStack {
-                        Circle().strokeBorder(LinearGradient(colors: [.white.opacity(0.28), .clear, .black.opacity(0.45)], startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
-                        Circle().strokeBorder(Color.black.opacity(0.12), lineWidth: 5)
-                        Circle().strokeBorder(Color.black.opacity(0.18), lineWidth: 4).frame(width: 28, height: 28).blur(radius: 1)
+                        // Paper: a soft printed sheen and a slightly pressed edge.
+                        Circle().fill(LinearGradient(colors: [.white.opacity(0.12), .clear, .black.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        Circle().strokeBorder(Color.black.opacity(0.18), lineWidth: 2)
+                        Circle().strokeBorder(Color.black.opacity(0.14), lineWidth: 0.8).padding(label * 0.06)
                     }
                 )
-                .overlay(Circle().stroke(Color.black.opacity(0.6), lineWidth: 1))
-            // Spindle hole.
+                .overlay(Circle().stroke(Color.black.opacity(0.55), lineWidth: 0.8))
+            // Spindle hole, real size.
             Circle()
-                .fill(RadialGradient(stops: [.init(color: .black, location: 0.4), .init(color: Color(hex: "#1a1a1d"), location: 1)], center: .center, startRadius: 0, endRadius: 6))
-                .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
-                .frame(width: 12, height: 12)
+                .fill(RadialGradient(stops: [.init(color: .black, location: 0.4), .init(color: Color(hex: "#1a1a1d"), location: 1)], center: .center, startRadius: 0, endRadius: 4))
+                .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 0.8))
+                .frame(width: 248 * LP.spindle + 2, height: 248 * LP.spindle + 2)
         }
         .frame(width: 248, height: 248)
         .rotationEffect(.degrees(angle))

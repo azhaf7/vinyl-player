@@ -326,7 +326,7 @@ struct RecapCard: View {
                     HStack(spacing: 10) {
                         Text("\(i + 1)").font(.system(size: 14, weight: .bold).monospacedDigit()).foregroundStyle(accent.color).frame(width: 16)
                         MiniRecord(diameter: 40, style: VinylStyle.at(0), art: ArtworkService.shared.image(for: item.entry.track),
-                                   artIndex: i, artInset: 4, sheen: false)
+                                   artIndex: i, artInset: LP.artInset(for: 40), sheen: false)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(item.entry.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                             Text(item.entry.artist).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6))

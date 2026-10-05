@@ -313,7 +313,7 @@ private struct SharePanel: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 14) {
                 ZStack(alignment: .topLeading) {
-                    MiniRecord(diameter: 72, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: art, artIndex: model.index, artInset: 15)
+                    MiniRecord(diameter: 72, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: art, artIndex: model.index, artInset: LP.artInset(for: 72))
                         .shadow(color: .black.opacity(0.4), radius: 6, x: 4, y: 6)
                         .offset(x: 34, y: 3)
                     CoverArt(image: art, index: model.index)
@@ -496,7 +496,7 @@ private struct CratePanel: View {
                     ForEach(Array(order.enumerated()), id: \.element) { n, i in
                         let t = tracks[i]
                         VStack(alignment: .leading, spacing: 6) {
-                            MiniRecord(diameter: 84, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 8, spindle: 6)
+                            MiniRecord(diameter: 84, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: artwork.image(for: t), artIndex: i, artInset: LP.artInset(for: 84), spindle: 6)
                                 .overlay(ring(n == 0))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(t.title).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
@@ -521,7 +521,7 @@ private struct CratePanel: View {
         return HStack(spacing: 0) {
             ForEach(Array((VinylStyle.all + [custom]).enumerated()), id: \.offset) { i, v in
                 VStack(spacing: 6) {
-                    MiniRecord(diameter: 46, style: v, art: art, artIndex: model.index, artInset: 5, ring: pstyle.labelRing)
+                    MiniRecord(diameter: 46, style: v, art: art, artIndex: model.index, artInset: LP.artInset(for: 46), ring: pstyle.labelRing)
                         .overlay(ring(i == model.vinyl))
                         .onTapGesture { model.selectVinyl(i) }
                     if i == VinylStyle.customIndex {
