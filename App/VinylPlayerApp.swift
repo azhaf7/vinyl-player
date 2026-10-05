@@ -86,13 +86,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject, UNUs
         }
     }
 
-    /// One place on screen at a time: the desktop turntable, the notch, or neither.
+    /// One place on screen at a time: the desktop turntable or the notch. The menu bar icon is always there.
     private func apply(_ mode: DisplayMode) {
         switch mode {
         case .desktop: notch.hide(); panel.show()
         case .notch: panel.hide(); notch.show()
-        case .both: panel.show(); notch.show()
-        case .menuBar: panel.hide(); notch.hide()
         }
     }
 
@@ -114,7 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject, UNUs
         let id = response.notification.request.content.userInfo["share"] as? String
         DispatchQueue.main.async {
             let share = SocialService.shared.inbox.first { $0.id.uuidString == id }
-            LibraryWindowController.shared.show(.inbox, share: share)
+            LibraryWindowController.shared.show(.friends, share: share)
         }
         completionHandler()
     }
@@ -154,14 +152,14 @@ private struct MenuContent: View {
         Button(CollectionStore.shared.isLiked(model.track) ? "Unlike Song" : "Like Song") { CollectionStore.shared.toggleLike(model.track) }
         Divider()
         Button(social.unopenedCount > 0 ? "Library — \(social.unopenedCount) new record\(social.unopenedCount == 1 ? "" : "s")…" : "Library…") {
-            LibraryWindowController.shared.show(social.unopenedCount > 0 ? .inbox : nil)
+            LibraryWindowController.shared.show(social.unopenedCount > 0 ? .friends : nil, page: social.unopenedCount > 0 ? .inbox : nil)
         }
         .keyboardShortcut("l")
         Divider()
         Picker("Show As", selection: $prefs.displayMode) {
             ForEach(DisplayMode.allCases) { Text($0.rawValue).tag($0) }
         }
-        if prefs.displayMode == .desktop || prefs.displayMode == .both {
+        if prefs.displayMode == .desktop {
             Toggle("Float Above Windows", isOn: $prefs.floatAboveWindows)
             Button("Move Player to Top Right") { app.panel.show(); app.panel.resetPosition() }
         }

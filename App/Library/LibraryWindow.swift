@@ -1,23 +1,33 @@
 import SwiftUI
 import AppKit
 
+/// Four places, each with a few pages picked at the top: everything that used to be nine sections.
 enum LibrarySection: String, CaseIterable, Identifiable {
-    case inbox = "Inbox", history = "History", liked = "Liked", playlists = "Playlists", crate = "Crate", recap = "Weekly Recap",
-         friends = "Friends", account = "Account", settings = "Settings"
+    case friends = "Friends", collection = "Collection", history = "History", settings = "Settings"
     var id: String { rawValue }
     var symbol: String {
         switch self {
-        case .inbox: return "tray.and.arrow.down"
-        case .history: return "clock.arrow.circlepath"
-        case .liked: return "heart"
-        case .playlists: return "music.note.list"
-        case .crate: return "square.stack"
-        case .recap: return "chart.bar"
         case .friends: return "person.2"
-        case .account: return "person.crop.circle"
+        case .collection: return "square.stack"
+        case .history: return "clock.arrow.circlepath"
         case .settings: return "gearshape"
         }
     }
+}
+
+enum FriendsPage: String, CaseIterable, Identifiable {
+    case inbox = "Inbox", friends = "Friends", code = "Your Code"
+    var id: String { rawValue }
+}
+
+enum CollectionPage: String, CaseIterable, Identifiable {
+    case liked = "Liked", playlists = "Playlists", crate = "Crate"
+    var id: String { rawValue }
+}
+
+enum HistoryPage: String, CaseIterable, Identifiable {
+    case played = "Played", recap = "Weekly Recap"
+    var id: String { rawValue }
 }
 
 enum OpenRecord {
@@ -26,7 +36,10 @@ enum OpenRecord {
 }
 
 final class LibraryNavigation: ObservableObject {
-    @Published var section: LibrarySection? = .inbox
+    @Published var section: LibrarySection? = .friends
+    @Published var friendsPage: FriendsPage = .inbox
+    @Published var collectionPage: CollectionPage = .liked
+    @Published var historyPage: HistoryPage = .played
     @Published var open: OpenRecord?
 }
 
@@ -36,9 +49,10 @@ final class LibraryWindowController {
     private var window: NSWindow?
     var model: PlayerModel?
 
-    func show(_ section: LibrarySection? = nil, share: Share? = nil) {
+    func show(_ section: LibrarySection? = nil, page: FriendsPage? = nil, share: Share? = nil) {
         if let section { nav.section = section }
-        if let share { nav.section = .inbox; nav.open = .share(share) }
+        if let page { nav.friendsPage = page }
+        if let share { nav.section = .friends; nav.friendsPage = .inbox; nav.open = .share(share) }
         if window == nil, let model {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 660),
                              styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -66,27 +80,67 @@ struct LibraryView: View {
         NavigationSplitView {
             List(LibrarySection.allCases, selection: $nav.section) { s in
                 Label(s.rawValue, systemImage: s.symbol)
-                    .badge(s == .inbox ? social.unopenedCount : 0)
+                    .badge(s == .friends ? social.unopenedCount : 0)
                     .tag(s)
             }
             .navigationSplitViewColumnWidth(min: 170, ideal: 190)
         } detail: {
             Group {
-                switch nav.section ?? .inbox {
-                case .inbox: InboxView(model: model, nav: nav)
-                case .history: HistoryView(model: model)
-                case .liked: LikedView(model: model)
-                case .playlists: PlaylistsView(model: model)
-                case .crate: CrateDigView(model: model)
-                case .recap: RecapView(model: model)
-                case .friends: FriendsView(model: model)
-                case .account: AccountView(model: model)
+                switch nav.section ?? .friends {
+                case .friends:
+                    VStack(spacing: 0) {
+                        Picker("", selection: $nav.friendsPage) {
+                            ForEach(FriendsPage.allCases) { p in
+                                Text(p == .inbox && social.unopenedCount > 0 ? "Inbox (\(social.unopenedCount))" : p.rawValue).tag(p)
+                            }
+                        }
+                        .pageTabs()
+                        switch nav.friendsPage {
+                        case .inbox: InboxView(model: model, nav: nav)
+                        case .friends: FriendsView(model: model)
+                        case .code: AccountView(model: model)
+                        }
+                    }
+                case .collection:
+                    VStack(spacing: 0) {
+                        Picker("", selection: $nav.collectionPage) {
+                            ForEach(CollectionPage.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                        .pageTabs()
+                        switch nav.collectionPage {
+                        case .liked: LikedView(model: model)
+                        case .playlists: PlaylistsView(model: model)
+                        case .crate: CrateDigView(model: model)
+                        }
+                    }
+                case .history:
+                    VStack(spacing: 0) {
+                        Picker("", selection: $nav.historyPage) {
+                            ForEach(HistoryPage.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                        .pageTabs()
+                        switch nav.historyPage {
+                        case .played: HistoryView(model: model)
+                        case .recap: RecapView(model: model)
+                        }
+                    }
                 case .settings: SettingsForm(model: model).frame(maxWidth: 620)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear { social.refresh() }
+    }
+}
+
+private extension View {
+    /// The page switcher at the top of a library section.
+    func pageTabs() -> some View {
+        self.pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .padding(.top, 14)
+            .padding(.bottom, 4)
     }
 }
 
@@ -119,7 +173,7 @@ struct SendMenu: View {
             if social.me == nil {
                 Button("Setting up sharing…") {}.disabled(true)
             } else if social.friends.isEmpty {
-                Button("Add friends first…") { LibraryWindowController.shared.show(.friends) }
+                Button("Add friends first…") { LibraryWindowController.shared.show(.friends, page: .friends) }
             } else {
                 ForEach(social.friends) { f in
                     Button(f.name + "  @" + f.username) {
@@ -542,7 +596,7 @@ private struct WelcomeView: View {
                             Text(m.blurb).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
                         }
                         .padding(16)
-                        .frame(width: 132, height: 170)
+                        .frame(width: 200, height: 170)
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color.primary.opacity(prefs.displayMode == m ? 0.1 : 0.04)))
                         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(prefs.displayMode == m ? Tokens.accent.color : .clear, lineWidth: 2))
                         .contentShape(Rectangle())

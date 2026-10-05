@@ -75,29 +75,31 @@ The app needs to have run at least once first.
 - **Skip:** the back and next buttons. The pet lifts the record out and drops in the next one. With the sample songs, going between song 3 and song 4 flips the record from side A to side B.
 - **Scrub:** drag along the progress bar. The tonearm follows.
 - **Crate (☰):**
-  - **Up next:** tap a record to play it.
+  - **Up next / Recent:** tap a record to play it; ‹ › move along the row.
   - **Records:** pick a vinyl colour, or your own with the colour well under **Custom**.
   - **Pets:** ten pets: Mochi, Bao, Pip, Tofu, Kiki, Nori, Biscuit, Peanut, Quack and Ember. Headphones, sunglasses and a scarf in the album's colour can be switched on and off. Everything is free. The pet waves when a friend's record arrives and dozes when the music stops.
-  - **Style:** one-tap themes (Classic, Midnight, Bubblegum, Forest, Ocean), plus colour pickers for the deck, record, label ring, accent, card and pet. The arrow next to a colour resets it.
+  - **Style:** one-tap themes (Classic, Midnight, Bubblegum, Forest, Ocean) and an accent colour. Settings → Colours → Fine-tune colours has pickers for the deck, record, label ring, card and pet.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
 - **Where it lives:** choose under **Show As** in the menu bar menu (the welcome window asks the first time):
   - **Desktop player:** the full turntable on your desktop.
   - **Notch:** a tiny spinning record and the pet beside the MacBook notch. Hover over it to see the record big with its cover, plus the song, album, controls and progress.
-  - **Both:** the desktop turntable and the notch together.
-  - **Menu bar only:** nothing on screen; control it from the menu and widgets.
 - **Settings:** right-click the turntable, click ⚙ in the crate or the expanded notch, or open Vinyl Player again from Applications. Everything is in the Library's **Settings** tab, so you don't need the menu bar icon (it can be hidden behind the notch on MacBooks).
 - **Like a song:** ♥ next to the title, in the notch, in the menu or with ⌃⌥L.
-- **Colours:** the 🎨 button on the turntable opens themes and colour pickers.
+- **Colours:** the 🎨 button on the turntable opens the themes.
 - **Keyboard shortcuts (anywhere):** ⌃⌥Space play/pause, ⌃⌥→ next, ⌃⌥← previous, ⌃⌥L like. You can turn them off in Settings.
 - **Library (⌘L in the menu):**
-  - **Inbox:** records friends sent you, and records you opened from links.
-  - **History:** every song you've played, with your top songs.
-  - **Liked** and **Playlists:** make playlists from any song (the playlist button on a row) and play them in order through Spotify or the sample songs.
-  - **Crate:** flip through your records like a crate at a record shop.
-  - **Weekly Recap:** your week in minutes, top artist and top songs, as a card you can copy, save or share.
-  - **Friends:** add friends by their code, send them songs, and see what they're spinning right now ("Listen along" plays it in your Spotify). Turn off "Show friends what I'm listening to" in Settings to keep yours private.
-  - **Account:** your friend code.
+  - **Friends:**
+    - **Inbox:** records friends sent you, and records you opened from links.
+    - **Friends:** add friends by their code, send them songs, and see what they're spinning right now ("Listen along" plays it in your Spotify). Turn off "Show friends what I'm listening to" in Settings to keep yours private.
+    - **Your Code:** your friend code.
+  - **Collection:**
+    - **Liked** and **Playlists:** make playlists from any song (the playlist button on a row) and play them in order through Spotify or the sample songs.
+    - **Crate:** flip through your records like a crate at a record shop, with ‹ › or the arrow keys.
+  - **History:**
+    - **Played:** every song you've played, with your top songs.
+    - **Weekly Recap:** your week in minutes, top artist and top songs, as a card you can copy, save or share.
+  - **Settings:** everything else.
 - **Sharing:** open the share panel (⇧):
   - **Share…** sends a sealed-record link through Messages, AirDrop or Mail. Anyone can open it in a browser; friends with the app can open it on their turntable, and it's saved in their Inbox.
   - **Send to a friend** puts the record straight into a friend's in-app Inbox, with a notification. There's no login: each Mac gets a friend code like `@mochi4821`, and friends add each other's code once. This needs the one-time setup below.

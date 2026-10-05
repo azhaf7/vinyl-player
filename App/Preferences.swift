@@ -12,22 +12,18 @@ enum MusicSource: String, CaseIterable, Identifiable {
 }
 
 enum DisplayMode: String, CaseIterable, Identifiable {
-    case desktop = "Desktop player", notch = "Notch", both = "Both", menuBar = "Menu bar only"
+    case desktop = "Desktop player", notch = "Notch"
     var id: String { rawValue }
     var symbol: String {
         switch self {
         case .desktop: return "record.circle"
         case .notch: return "rectangle.topthird.inset.filled"
-        case .both: return "rectangle.on.rectangle"
-        case .menuBar: return "menubar.rectangle"
         }
     }
     var blurb: String {
         switch self {
         case .desktop: return "The full turntable on your desktop, with the pet walking over to work the tonearm."
         case .notch: return "A tiny spinning record and the pet beside the notch. Hover for the song and controls."
-        case .both: return "The turntable on your desktop and the record in the notch, together."
-        case .menuBar: return "Nothing on screen; control it from the menu bar and widgets."
         }
     }
 }

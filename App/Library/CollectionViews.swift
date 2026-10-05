@@ -228,6 +228,7 @@ struct CrateDigView: View {
                     LazyHStack(spacing: -40) {
                         ForEach(list) { e in
                             TrackArt(track: e.track, size: 220, radius: 6)
+                                .drawingGroup()
                                 .shadow(color: .black.opacity(0.45), radius: 12, x: 6, y: 10)
                                 .scrollTransition(axis: .horizontal) { content, phase in
                                     content
@@ -245,6 +246,16 @@ struct CrateDigView: View {
                 .scrollTargetBehavior(.viewAligned)
                 .scrollPosition(id: $current, anchor: .center)
                 .frame(height: 280)
+                .overlay(alignment: .leading) {
+                    StepButton(symbol: "chevron.left", enabled: position(in: list) > 0) { step(-1, in: list) }
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                        .padding(.leading, 16)
+                }
+                .overlay(alignment: .trailing) {
+                    StepButton(symbol: "chevron.right", enabled: position(in: list) < list.count - 1) { step(1, in: list) }
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                        .padding(.trailing, 16)
+                }
 
                 if let e = list.first(where: { $0.id == current }) ?? list.first {
                     VStack(spacing: 6) {
@@ -262,11 +273,45 @@ struct CrateDigView: View {
                         .padding(.top, 6)
                     }
                 }
-                Text("Scroll or swipe to flip through the crate.").font(.caption).foregroundStyle(.secondary)
+                Text("Click ‹ ›, press the arrow keys or swipe to flip through the crate.").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }
         .onChange(of: source) { current = nil }
+    }
+
+    private func position(in list: [HistoryEntry]) -> Int {
+        list.firstIndex { $0.id == current } ?? 0
+    }
+
+    /// One record along, with a soft spring so the crate glides rather than jumps.
+    private func step(_ dir: Int, in list: [HistoryEntry]) {
+        guard !list.isEmpty else { return }
+        let j = max(0, min(list.count - 1, position(in: list) + dir))
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) { current = list[j].id }
+    }
+}
+
+/// Round ‹ › button for flipping through a row of records.
+struct StepButton: View {
+    let symbol: String
+    var enabled = true
+    var size: CGFloat = 36
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: size * 0.4, weight: .bold))
+                .frame(width: size, height: size)
+                .background(Circle().fill(.ultraThinMaterial))
+                .overlay(Circle().strokeBorder(Color.primary.opacity(0.1), lineWidth: 1))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .opacity(enabled ? 1 : 0.35)
+        .disabled(!enabled)
+        .help(symbol == "chevron.left" ? "Previous record" : "Next record")
     }
 }
 

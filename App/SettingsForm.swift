@@ -14,7 +14,7 @@ struct SettingsForm: View {
                     ForEach(DisplayMode.allCases) { Text($0.rawValue).tag($0) }
                 }
                 Text(prefs.displayMode.blurb).font(.caption).foregroundStyle(.secondary)
-                if prefs.displayMode == .desktop || prefs.displayMode == .both {
+                if prefs.displayMode == .desktop {
                     Toggle("Float above other windows", isOn: $prefs.floatAboveWindows)
                     Button("Move the turntable to the top right") {
                         (NSApp.delegate as? AppDelegate)?.panel.resetPosition()
@@ -70,13 +70,15 @@ struct SettingsForm: View {
                     ForEach(Array(PlayerStyle.presets.enumerated()), id: \.offset) { i, p in Text(p.name).tag(i) }
                     if !PlayerStyle.presets.contains(where: { $0.style == prefs.style }) { Text("Custom").tag(-1) }
                 }
-                color("Deck", \.deck, Tokens.sandTop)
-                color("Record", \.vinyl, RGB(hex: "#101012"))
-                color("Label ring", \.ring, Tokens.labelRing)
                 color("Accent", \.accent, Tokens.accent)
-                color("Card", \.card, RGB(hex: "#1e1e22"))
-                color("Pet", \.pet, PetSpec.at(model.pet).palette["o"] ?? .white)
-                Button("Reset all colours") { prefs.style = PlayerStyle(); model.selectVinyl(0) }
+                DisclosureGroup("Fine-tune colours") {
+                    color("Deck", \.deck, Tokens.sandTop)
+                    color("Record", \.vinyl, RGB(hex: "#101012"))
+                    color("Label ring", \.ring, Tokens.labelRing)
+                    color("Card", \.card, RGB(hex: "#1e1e22"))
+                    color("Pet", \.pet, PetSpec.at(model.pet).palette["o"] ?? .white)
+                    Button("Reset all colours") { prefs.style = PlayerStyle(); model.selectVinyl(0) }
+                }
             }
 
             Section("Keyboard shortcuts") {

@@ -401,7 +401,7 @@ private struct FriendSendRow: View {
                             }
                             .buttonStyle(PressStyle(pressed: 0.95))
                         }
-                        Button { LibraryWindowController.shared.show(.friends) } label: {
+                        Button { LibraryWindowController.shared.show(.friends, page: .friends) } label: {
                             Label(social.friends.isEmpty ? "Add friends" : "Add", systemImage: "plus")
                                 .font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink2)
                                 .padding(.horizontal, 10).frame(height: 30)
@@ -429,6 +429,8 @@ private struct CratePanel: View {
     let model: PlayerModel
     let ink: Ink
     @ObservedObject var artwork = ArtworkService.shared
+    /// First record shown in the Up next / Recent strip, for the ‹ › buttons.
+    @State private var stripStart = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -485,7 +487,9 @@ private struct CratePanel: View {
         let order = model.isLive
             ? Array(stride(from: min(model.index, tracks.count - 1), through: max(0, model.index - 19), by: -1))
             : tracks.indices.map { (model.index + $0) % tracks.count }
-        return VStack(alignment: .leading, spacing: 12) {
+        return ScrollViewReader { proxy in
+          HStack(spacing: 6) {
+            StepButton(symbol: "chevron.left", enabled: stripStart > 0, size: 24) { scrollStrip(-1, order, proxy) }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(Array(order.enumerated()), id: \.element) { n, i in
@@ -507,7 +511,16 @@ private struct CratePanel: View {
                 }
                 .padding(EdgeInsets(top: 4, leading: 2, bottom: 6, trailing: 2))
             }
+            StepButton(symbol: "chevron.right", enabled: stripStart < order.count - 3, size: 24) { scrollStrip(1, order, proxy) }
+          }
         }
+    }
+
+    /// Moves the record strip three records along, smoothly.
+    private func scrollStrip(_ dir: Int, _ order: [Int], _ proxy: ScrollViewProxy) {
+        guard !order.isEmpty else { return }
+        stripStart = max(0, min(order.count - 1, stripStart + dir * 3))
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) { proxy.scrollTo(order[stripStart], anchor: .leading) }
     }
 
     private var records: some View {
@@ -588,14 +601,13 @@ private struct CratePanel: View {
                     if i < PlayerStyle.presets.count - 1 { Spacer(minLength: 4) }
                 }
             }
-            Text("Your colours").font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink3)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-                colorRow("Deck", \.deck, Tokens.sandTop)
-                colorRow("Record", \.vinyl, RGB(hex: "#101012"))
-                colorRow("Label ring", \.ring, Tokens.labelRing)
+            HStack(spacing: 8) {
                 colorRow("Accent", \.accent, Tokens.accent)
-                colorRow("Card", \.card, RGB(hex: "#1e1e22"))
-                colorRow("Pet", \.pet, PetSpec.at(model.pet).palette["o"] ?? .white)
+                Text("More colours in Settings")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(ink.ink3)
+                    .underline()
+                    .onTapGesture { LibraryWindowController.shared.show(.settings) }
             }
         }
     }
