@@ -141,12 +141,29 @@ final class FrameDriver: NSObject {
 
 /// `NSVisualEffectView` (.hudWindow) behind the glass.
 struct VisualEffectBlur: NSViewRepresentable {
+    var radius: CGFloat = 0
+
     func makeNSView(context: Context) -> NSVisualEffectView {
         let v = NSVisualEffectView()
         v.material = .hudWindow
         v.blendingMode = .behindWindow
         v.state = .active
+        v.maskImage = Self.mask(radius)
         return v
+    }
+
+    /// Stretchable rounded-rect mask so the blur never shows past the card's corners.
+    static func mask(_ r: CGFloat) -> NSImage? {
+        guard r > 0 else { return nil }
+        let side = r * 2 + 1
+        let img = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: rect, xRadius: r, yRadius: r).fill()
+            return true
+        }
+        img.capInsets = NSEdgeInsets(top: r, left: r, bottom: r, right: r)
+        img.resizingMode = .stretch
+        return img
     }
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}

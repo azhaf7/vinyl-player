@@ -7,6 +7,8 @@ struct Track: Codable, Hashable {
     var duration: Double      // seconds
     var bpm: Double
     var tintHex: String       // used until the real cover's colour is known
+    var artworkURL: String? = nil   // from the music app, when it provides one
+    var sourceID: String? = nil     // the music app's id for the song
 
     /// Cache key shared by artwork lookup, custom covers and the widget snapshot.
     var key: String { (title + "|" + artist).lowercased() }

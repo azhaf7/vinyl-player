@@ -64,7 +64,7 @@ struct GlassBackground: View {
     let radius: CGFloat
     var body: some View {
         ZStack {
-            VisualEffectBlur()
+            VisualEffectBlur(radius: radius)
             ink.glass
         }
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
@@ -104,8 +104,6 @@ private struct PlayerCard: View {
                 .allowsHitTesting(false)
         }
         .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .shadow(color: .black.opacity(0.55), radius: 35, y: 30)
-        .shadow(color: .black.opacity(0.35), radius: 10, y: 8)
     }
 }
 
@@ -328,7 +326,6 @@ private struct SharePanel: View {
         .padding(16)
         .frame(width: 344, alignment: .leading)
         .background(GlassBackground(ink: ink, radius: 24))
-        .shadow(color: .black.opacity(0.5), radius: 25, y: 20)
     }
 }
 
@@ -340,7 +337,7 @@ private struct CratePanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 4) {
-                tab("Up next", .queue)
+                tab(model.isLive ? "Recent" : "Up next", .queue)
                 tab("Records", .records)
                 tab("Pets", .pets)
             }
@@ -356,7 +353,6 @@ private struct CratePanel: View {
         .padding(EdgeInsets(top: 12, leading: 12, bottom: 14, trailing: 12))
         .frame(width: 344, alignment: .leading)
         .background(GlassBackground(ink: ink, radius: 24))
-        .shadow(color: .black.opacity(0.5), radius: 25, y: 20)
     }
 
     private func tab(_ title: String, _ d: Drawer) -> some View {
@@ -377,7 +373,10 @@ private struct CratePanel: View {
     private var queue: some View {
         let _ = artwork.revision
         let tracks = model.tracks
-        let order = tracks.indices.map { (model.index + $0) % tracks.count }
+        // Sample songs: the queue from the current song on. Live: recently played, newest first.
+        let order = model.isLive
+            ? Array(stride(from: min(model.index, tracks.count - 1), through: max(0, model.index - 19), by: -1))
+            : tracks.indices.map { (model.index + $0) % tracks.count }
         let custom = artwork.hasCustomCover(model.track)
         return VStack(alignment: .leading, spacing: 12) {
             Text((custom ? "Replace cover for “" : "+ Use your own cover for “") + model.track.title + "”")
@@ -393,7 +392,7 @@ private struct CratePanel: View {
                                 .overlay(ring(n == 0))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(t.title).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
-                                Text(n == 0 ? (model.playing ? "Now playing" : "On deck") : n == 1 ? "Up next" : fmt(t.duration))
+                                Text(n == 0 ? (model.playing ? "Now playing" : "On deck") : model.isLive ? "Played" : n == 1 ? "Up next" : fmt(t.duration))
                                     .font(.system(size: 10)).foregroundStyle(ink.ink3)
                             }
                             .lineLimit(1)

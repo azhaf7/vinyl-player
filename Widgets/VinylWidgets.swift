@@ -367,7 +367,7 @@ private struct LargeView: View {
                 .offset(x: 20, y: 280)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Up next").font(.system(size: 11, weight: .semibold)).foregroundStyle(look.ink3)
+                    Text(s.live == true ? "Recently played" : "Up next").font(.system(size: 11, weight: .semibold)).foregroundStyle(look.ink3)
                     HStack(spacing: 10) {
                         ForEach(s.upNext, id: \.index) { u in
                             HStack(spacing: 8) {

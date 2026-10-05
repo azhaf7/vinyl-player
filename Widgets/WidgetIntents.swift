@@ -42,7 +42,7 @@ enum WidgetActions {
                 s.isPlaying = true; s.pausedSince = nil
             }
         case .next, .previous:
-            if running { return } // the app swaps the record and writes the new song itself
+            if running || s.live == true { return } // the app (or the music app) changes the song itself
             let n = Catalog.tracks.count
             let known: [Int: WidgetSnapshot.Item] = Dictionary(([s.current] + s.upNext).map { ($0.index, $0) }, uniquingKeysWith: { a, _ in a })
             func item(_ i: Int) -> WidgetSnapshot.Item {

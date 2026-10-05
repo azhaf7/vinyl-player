@@ -6,6 +6,11 @@ enum ThemeChoice: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum MusicSource: String, CaseIterable, Identifiable {
+    case nowPlaying = "Spotify & Apple Music", samples = "Sample songs"
+    var id: String { rawValue }
+}
+
 enum DriveChoice: String, CaseIterable, Identifiable {
     case direct = "Direct drive", belt = "Belt drive"
     var id: String { rawValue }
@@ -24,6 +29,7 @@ final class Preferences: ObservableObject {
     @Published var floatAboveWindows: Bool { didSet { d.set(floatAboveWindows, forKey: "floatAboveWindows") } }
     @Published var shareBaseURL: String { didSet { d.set(shareBaseURL, forKey: "shareBaseURL") } }
     @Published var senderName: String { didSet { d.set(senderName, forKey: "senderName") } }
+    @Published var musicSource: MusicSource { didSet { d.set(musicSource.rawValue, forKey: "musicSource") } }
 
     /// Where the Shared Record page (web/shared-record) is hosted.
     static let defaultShareBaseURL = "https://azhaf7.github.io/vinyl-player/shared-record/"
@@ -39,6 +45,7 @@ final class Preferences: ObservableObject {
         floatAboveWindows = d.bool(forKey: "floatAboveWindows")
         shareBaseURL = d.string(forKey: "shareBaseURL") ?? Preferences.defaultShareBaseURL
         senderName = d.string(forKey: "senderName") ?? ""
+        musicSource = MusicSource(rawValue: d.string(forKey: "musicSource") ?? "") ?? .nowPlaying
     }
 
     var launchAtLogin: Bool {

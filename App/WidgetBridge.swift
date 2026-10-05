@@ -63,14 +63,16 @@ final class WidgetBridge {
             _ = artwork.image(for: t) // starts a lookup if needed
             return .init(title: t.title, artist: t.artist, index: i, coverFile: artwork.coverFile(for: t))
         }
-        let upNext = (1...3).map { item((model.index + $0) % tracks.count) }
+        let upNext = model.isLive
+            ? (1...3).map { model.index - $0 }.filter { $0 >= 0 && $0 < tracks.count }.map { item($0) }
+            : (1...3).map { item((model.index + $0) % tracks.count) }
         let snap = WidgetSnapshot(current: item(model.index), upNext: upNext,
                                   tintHex: artwork.tint(for: model.track).hex,
                                   isPlaying: model.pendingPlaying,
                                   elapsed: Double(model.elapsedSec), duration: model.duration,
                                   side: model.side, petIndex: model.pet, vinylIndex: model.vinyl,
                                   headphones: model.phonesUnlocked && model.wearPhones,
-                                  updated: Date(), pausedSince: model.pausedSince)
+                                  updated: Date(), pausedSince: model.pausedSince, live: model.isLive)
         if let last = lastSnapshot, Self.same(last, snap) { return }
         lastSnapshot = snap
         SharedStore.writeSnapshot(snap)

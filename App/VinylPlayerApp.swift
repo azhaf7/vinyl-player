@@ -25,12 +25,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private(set) lazy var panel = DesktopPanelController(model: model)
     private var bridge: WidgetBridge?
     private var levelObserver: AnyCancellable?
+    private var sourceObserver: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         bridge = WidgetBridge(model: model)
+        sourceObserver = Preferences.shared.$musicSource.removeDuplicates().sink { [weak self] source in
+            DispatchQueue.main.async { self?.connect(source) }
+        }
         panel.show()
         levelObserver = Preferences.shared.$floatAboveWindows.sink { [weak self] _ in
             DispatchQueue.main.async { self?.panel.applyLevel() }
+        }
+    }
+
+    private func connect(_ source: MusicSource) {
+        switch source {
+        case .nowPlaying: model.use(NowPlayingService())
+        case .samples: model.use(MockPlaybackService())
         }
     }
 
@@ -47,6 +58,10 @@ private struct MenuContent: View {
     var body: some View {
         let model = app.model
         Text(model.track.title + " — " + model.track.artist)
+        Picker("Music", selection: $prefs.musicSource) {
+            ForEach(MusicSource.allCases) { Text($0.rawValue).tag($0) }
+        }
+        Divider()
         Button(model.pendingPlaying ? "Pause" : "Play") { model.toggle() }
         Button("Next") { model.next() }
         Button("Previous") { model.previous() }
@@ -99,8 +114,15 @@ private struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             Section("Music") {
-                LabeledContent("Source", value: app.model.service.name)
-                Text("Spotify sign-in is coming next. Until then the player uses six sample songs with their real covers.")
+                Picker("Follow", selection: $prefs.musicSource) {
+                    ForEach(MusicSource.allCases) { Text($0.rawValue).tag($0) }
+                }
+                TimelineView(.periodic(from: .now, by: 2)) { _ in
+                    Text(app.model.service.status)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Shows what the Spotify or Music app on this Mac is playing, and controls it. The first time, macOS asks to let Vinyl Player control the app; choose OK.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

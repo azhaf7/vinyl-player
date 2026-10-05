@@ -31,7 +31,8 @@ final class ArtworkService: ObservableObject {
 
     // MARK: Reading
 
-    func image(for track: Track, sourceURL: URL? = nil) -> NSImage? {
+    func image(for track: Track) -> NSImage? {
+        let sourceURL = track.artworkURL.flatMap(URL.init(string:))
         let key = track.key
         if let img = images[key] { return img }
         if let file = coverFile(for: track), let img = NSImage(contentsOf: SharedStore.coversURL.appendingPathComponent(file)) {

@@ -33,6 +33,8 @@ final class PlayerModel {
     private(set) var phonesUnlocked = false
     private(set) var wearPhones = false
     private(set) var elapsedSec = 0
+    /// Bumped when the music source's track list changes.
+    private(set) var tracksVersion = 0
 
     // MARK: Per-frame output
     private(set) var discAngle = 0.0
@@ -70,6 +72,8 @@ final class PlayerModel {
     @ObservationIgnored private var listened = 0.0
     @ObservationIgnored private var timers: [DispatchWorkItem] = []
     @ObservationIgnored private var lastSave = Date()
+    @ObservationIgnored private var remotePlaying: Bool?
+    @ObservationIgnored private var pendingRemoteIndex: Int?
 
     // Pet
     private enum Mode { case home, walk, hopDown, grab, hopUp, back, swap }
@@ -125,9 +129,10 @@ final class PlayerModel {
         hookService()
     }
 
-    var tracks: [Track] { service.tracks }
-    var track: Track { tracks[index] }
-    var side: String { Catalog.side(of: index) }
+    var tracks: [Track] { _ = tracksVersion; return service.tracks }
+    var track: Track { let t = tracks; return t.indices.contains(index) ? t[index] : t[t.count - 1] }
+    var isLive: Bool { service.isLive }
+    var side: String { isLive ? "A" : Catalog.side(of: index) }
     var duration: Double { track.duration }
     var pendingPlaying: Bool {
         switch pAction {
@@ -153,7 +158,9 @@ final class PlayerModel {
 
         if motor {
             position += rawDt / 1000 * min(1, vel / full)
-            if position >= duration { step(1) }
+            if position >= duration {
+                if isLive { position = duration } else { step(1) }
+            }
         }
 
         if motor && armLow && stuck == 0 && !reduced && Double.random(in: 0..<1) < dt / 150_000 { stuck = 1500 }
@@ -227,6 +234,7 @@ final class PlayerModel {
         later(980) { [weak self] in
             guard let self else { return }
             self.motor = true
+            self.remotePlaying = true
             self.service.play()
         }
     }
@@ -234,6 +242,7 @@ final class PlayerModel {
     private func doPause() {
         clearTimers()
         playing = false; motor = false
+        remotePlaying = false
         service.pause()
         stateChanged()
         later(420) { [weak self] in self?.armLow = false }
@@ -256,6 +265,11 @@ final class PlayerModel {
     func previous() { step(-1) }
 
     private func step(_ dir: Int) {
+        if isLive {
+            // The music app owns the queue; the record is swapped when it reports the new song.
+            if dir > 0 { service.nextTrack() } else { service.previousTrack() }
+            return
+        }
         if dir < 0 && position > 3 { seek(fraction: 0); return }
         swapTo((index + dir + tracks.count) % tracks.count)
     }
@@ -264,7 +278,7 @@ final class PlayerModel {
         guard !busy, i != index else { return }
         guard petPerforms else { return pick(i) }
         pAction = .swap; pTarget = i
-        pFlip = index / 3 != i / 3 && abs(i - index) == 1
+        pFlip = !isLive && index / 3 != i / 3 && abs(i - index) == 1
         pWasPlaying = playing; pSwapped = false
         busy = true
         if pWasPlaying {
@@ -306,17 +320,48 @@ final class PlayerModel {
     /// Apply a change that came from the music source rather than from a click here.
     func apply(_ change: RemoteChange) {
         switch change {
-        case .playing(let p): if p != pendingPlaying { toggle() }
-        case .track(let i): if i != index { swapTo(i) }
-        case .position(let s): position = min(duration, max(0, s))
+        case .reset(let i):
+            tracksVersion += 1
+            clearTimers()
+            index = i; position = 0; elapsedSec = 0
+            save(); stateChanged()
+        case .track(let i):
+            tracksVersion += 1
+            if busy { pendingRemoteIndex = i } else if i != index { swapTo(i) }
+        case .playing(let p):
+            remotePlaying = p
+            if !busy && p != pendingPlaying { toggle() }
+        case .position(let s):
+            // Ignore while a record swap is in progress; small differences are just clock drift.
+            guard pAction != .swap, pendingRemoteIndex == nil, abs(s - position) > 1 else { return }
+            position = min(duration, max(0, s))
+            elapsedSec = Int(position)
         }
+    }
+
+    /// After the pet finishes, catch up with anything the music app did meanwhile.
+    private func reconcile() {
+        if let i = pendingRemoteIndex {
+            pendingRemoteIndex = nil
+            if i != index { swapTo(i); return }
+        }
+        if let p = remotePlaying, p != playing { toggle() }
     }
 
     /// Switch music source (e.g. to Spotify once signed in).
     func use(_ newService: PlaybackService) {
+        service.stop()
+        service.onRemoteChange = nil
+        clearTimers()
+        if playing { playing = false; motor = false; armLow = false; armOver = false }
+        busy = false; pAction = nil; pMode = .home; pX = Self.HOME.x; pY = Self.HOME.y
+        remotePlaying = nil; pendingRemoteIndex = nil
         service = newService
+        tracksVersion += 1
+        index = isLive ? 0 : min(max(0, UserDefaults.standard.integer(forKey: "trackIndex")), tracks.count - 1)
+        position = 0; elapsedSec = 0
         hookService()
-        if index >= tracks.count { index = 0 }
+        service.start()
         stateChanged()
     }
 
@@ -390,6 +435,7 @@ final class PlayerModel {
                     recY = 0; recZ = 0; pMode = .home; pFace = 1; pAction = nil
                     busy = false
                     stateChanged()
+                    if isLive { reconcile() }
                 default: break
                 }
             }
@@ -473,7 +519,8 @@ final class PlayerModel {
 
     private func save() {
         let d = UserDefaults.standard
-        d.set(index, forKey: "trackIndex"); d.set(rpm, forKey: "rpm")
+        if !isLive { d.set(index, forKey: "trackIndex") }
+        d.set(rpm, forKey: "rpm")
         d.set(vinyl, forKey: "vinyl"); d.set(pet, forKey: "pet")
         d.set(phonesUnlocked, forKey: "phonesUnlocked"); d.set(wearPhones, forKey: "wearPhones")
         d.set(listened, forKey: "listenedMs")
