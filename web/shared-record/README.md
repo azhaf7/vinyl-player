@@ -14,6 +14,7 @@ https://<host>/shared-record/#song=Dreams&by=Fleetwood%20Mac&from=Sam&pet=Mochi
 | `by`   | artist                     | `Daft Punk`  |
 | `from` | sender name                | `A friend`   |
 | `pet`  | sender's pet name (optional) | (none)       |
+| `spotify` | Spotify track id (optional): "Open in Spotify" opens that exact song | (search) |
 
 Parameters go in the URL fragment so they never reach a server. Query-string parameters also work as a fallback. Native app users get the same parameters through `vinyl://record?song=…&by=…&from=…&pet=…`, which the Mac app handles.
 

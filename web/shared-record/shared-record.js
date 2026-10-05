@@ -17,7 +17,9 @@
   function params() {
     const h = new URLSearchParams(location.hash.slice(1)), q = new URLSearchParams(location.search);
     const g = (k) => (h.get(k) || q.get(k) || '').trim();
-    return { title: g('song') || 'Get Lucky', artist: g('by') || 'Daft Punk', from: g('from') || 'A friend', pet: g('pet') };
+    const sp = g('spotify');
+    return { title: g('song') || 'Get Lucky', artist: g('by') || 'Daft Punk', from: g('from') || 'A friend', pet: g('pet'),
+             spotify: /^[A-Za-z0-9]{22}$/.test(sp) ? sp : '' };
   }
 
   // ---- Artwork (iTunes Search API, cached in localStorage) ----
@@ -155,7 +157,7 @@
     $('songTitle').textContent = p.title;
     $('songArtist').textContent = p.artist;
     const q = encodeURIComponent(p.title + ' ' + p.artist);
-    $('spotifyLink').href = 'https://open.spotify.com/search/' + q;
+    $('spotifyLink').href = p.spotify ? 'https://open.spotify.com/track/' + p.spotify : 'https://open.spotify.com/search/' + q;
     $('appleLink').href = 'https://music.apple.com/search?term=' + q;
     document.title = opened ? p.title + ' · ' + p.artist : fromLine;
     page.style.setProperty('--tint', FALLBACK_TINT);

@@ -499,7 +499,12 @@ final class PlayerModel {
             return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
         }
         let from = prefs.senderName.trimmingCharacters(in: .whitespaces).isEmpty ? "A friend" : prefs.senderName
-        let frag = [("song", track.title), ("by", track.artist), ("from", from), ("pet", PetSpec.at(pet).name)]
+        var fields = [("song", track.title), ("by", track.artist), ("from", from), ("pet", PetSpec.at(pet).name)]
+        // From Spotify: link the exact track, not a search.
+        if let id = track.sourceID, id.hasPrefix("spotify:track:") {
+            fields.append(("spotify", String(id.dropFirst("spotify:track:".count))))
+        }
+        let frag = fields
             .map { $0.0 + "=" + enc($0.1) }.joined(separator: "&")
         var base = prefs.shareBaseURL.trimmingCharacters(in: .whitespaces)
         if let hash = base.firstIndex(of: "#") { base = String(base[..<hash]) }
