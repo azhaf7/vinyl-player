@@ -92,14 +92,8 @@ struct SettingsForm: View {
                 }
             }
 
-            Section("Friends") {
-                Toggle("Show friends what I'm listening to", isOn: $prefs.shareListening)
-                Text("Friends see the song on your turntable in their Friends list and can listen along.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-
             Section("Sharing") {
-                TextField("Your name", text: $prefs.senderName, prompt: Text("A friend"))
+                TextField("Your name on shared records", text: $prefs.senderName, prompt: Text("A friend"))
                 TextField("Shared record page", text: $prefs.shareBaseURL)
                 Text("Where share links open for people without the app. Host the web folder (e.g. on Vercel) and paste its shared-record address here.")
                     .font(.caption)

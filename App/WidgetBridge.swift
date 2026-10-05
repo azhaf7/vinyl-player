@@ -76,8 +76,6 @@ final class WidgetBridge {
                                   updated: Date(), pausedSince: model.pausedSince, live: model.isLive,
                                   sunglasses: model.sunglassesOn, style: Preferences.shared.style,
                                   hidePet: !Preferences.shared.showPet)
-        let real = !(model.isLive && model.track.sourceID == nil)
-        SocialService.shared.updateNowPlaying(real ? model.track : nil, playing: model.pendingPlaying)
         if let last = lastSnapshot, Self.same(last, snap) { return }
         lastSnapshot = snap
         SharedStore.writeSnapshot(snap)

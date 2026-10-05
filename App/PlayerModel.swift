@@ -546,26 +546,7 @@ final class PlayerModel {
 
     // MARK: Share
 
-    func shareURL() -> URL? {
-        func enc(_ s: String) -> String {
-            var allowed = CharacterSet.alphanumerics
-            allowed.insert(charactersIn: "-._~")
-            return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
-        }
-        let from = prefs.senderName.trimmingCharacters(in: .whitespaces).isEmpty ? "A friend" : prefs.senderName
-        var fields = [("song", track.title), ("by", track.artist), ("from", from), ("pet", PetSpec.at(pet).name)]
-        // The exact cover, so the friend sees the right artwork without a search.
-        if let art = ArtworkService.shared.remoteURL(for: track) { fields.append(("art", art)) }
-        // From Spotify: link the exact track, not a search.
-        if let id = track.sourceID, id.hasPrefix("spotify:track:") {
-            fields.append(("spotify", String(id.dropFirst("spotify:track:".count))))
-        }
-        let frag = fields
-            .map { $0.0 + "=" + enc($0.1) }.joined(separator: "&")
-        var base = prefs.shareBaseURL.trimmingCharacters(in: .whitespaces)
-        if let hash = base.firstIndex(of: "#") { base = String(base[..<hash]) }
-        return URL(string: base + "#" + frag)
-    }
+    func shareURL() -> URL? { ShareLinks.url(for: track, pet: PetSpec.at(pet).name) }
 
     func copyShareLink() {
         guard let url = shareURL() else { return }
@@ -586,5 +567,34 @@ final class PlayerModel {
         d.set(wearPhones, forKey: "wearPhones"); d.set(wearShades, forKey: "wearShades"); d.set(wearScarf, forKey: "wearScarf")
         d.set(listened, forKey: "listenedMs")
         lastSave = Date()
+    }
+}
+
+/// Links that open a song as a sealed record on the web (and on this app via vinyl://).
+enum ShareLinks {
+    static func url(for track: Track, pet: String? = nil) -> URL? {
+        func enc(_ s: String) -> String {
+            var allowed = CharacterSet.alphanumerics
+            allowed.insert(charactersIn: "-._~")
+            return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
+        }
+        let prefs = Preferences.shared
+        let from = prefs.senderName.trimmingCharacters(in: .whitespaces).isEmpty ? "A friend" : prefs.senderName
+        var fields = [("song", track.title), ("by", track.artist), ("from", from)]
+        if let pet, prefs.showPet { fields.append(("pet", pet)) }
+        // The exact cover, so the friend sees the right artwork without a search.
+        if let art = ArtworkService.shared.remoteURL(for: track) { fields.append(("art", art)) }
+        // From Spotify: link the exact track, not a search.
+        if let id = track.sourceID, id.hasPrefix("spotify:track:") {
+            fields.append(("spotify", String(id.dropFirst("spotify:track:".count))))
+        }
+        let frag = fields.map { $0.0 + "=" + enc($0.1) }.joined(separator: "&")
+        var base = prefs.shareBaseURL.trimmingCharacters(in: .whitespaces)
+        if let hash = base.firstIndex(of: "#") { base = String(base[..<hash]) }
+        return URL(string: base + "#" + frag)
+    }
+
+    static func message(for track: Track) -> String {
+        "I sent you a record: \(track.title) by \(track.artist)"
     }
 }

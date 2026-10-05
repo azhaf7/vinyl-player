@@ -39,10 +39,6 @@ struct PlayerRoot: View {
             VStack(alignment: .leading, spacing: 12) {
                 PlayerCard(model: model, ink: ink, art: art, tint: tint)
                     .padding(.top, 58)
-                if model.shareOpen {
-                    SharePanel(model: model, ink: ink, art: art)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                }
                 if model.drawer != nil {
                     CratePanel(model: model, ink: ink)
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -201,10 +197,18 @@ private struct InfoRow: View {
                 IconButton(symbol: "backward.end.fill", size: 32, ink: ink) { model.previous() }
                 PlayButton(playing: model.playing, ink: ink) { model.toggle() }
                 IconButton(symbol: "forward.end.fill", size: 32, ink: ink) { model.next() }
-                IconButton(symbol: "square.and.arrow.up", size: 30, ink: ink, selected: model.shareOpen) {
-                    model.shareOpen.toggle(); model.drawer = nil; model.copied = false
+                if let url = model.shareURL() {
+                    // AirDrop, Messages, Mail, Notes, Copy Link…: the song arrives as a sealed record.
+                    ShareLink(item: url, subject: Text(model.track.title), message: Text(ShareLinks.message(for: model.track))) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(ink.ink2)
+                            .frame(width: 30, height: 30)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(PressStyle())
+                    .help("Share as a record")
                 }
-                .help("Share as a record")
                 IconButton(symbol: "line.3.horizontal", size: 30, ink: ink, selected: model.drawer != nil && model.drawer != .style) {
                     model.drawer = model.drawer == nil || model.drawer == .style ? .queue : nil; model.shareOpen = false
                 }
@@ -307,126 +311,6 @@ private struct PetView: View {
 }
 
 // MARK: - Panels
-
-private struct SharePanel: View {
-    @Environment(\.playerStyle) private var pstyle
-    let model: PlayerModel
-    let ink: Ink
-    let art: NSImage?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 14) {
-                ZStack(alignment: .topLeading) {
-                    MiniRecord(diameter: 72, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: art, artIndex: model.index, artInset: LP.artInset(for: 72))
-                        .shadow(color: .black.opacity(0.4), radius: 6, x: 4, y: 6)
-                        .offset(x: 34, y: 3)
-                    CoverArt(image: art, index: model.index)
-                        .frame(width: 78, height: 78)
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                        .shadow(color: .black.opacity(0.4), radius: 4, x: 3)
-                }
-                .frame(width: 120, height: 78, alignment: .topLeading)
-                .onTapGesture { if let url = model.shareURL() { NSWorkspace.shared.open(url) } }
-                .help("Preview what your friend sees")
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Share as a record").font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink3)
-                    Text(model.track.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(ink.ink)
-                    Text(model.track.artist).font(.system(size: 12)).foregroundStyle(ink.ink2)
-                }
-                .lineLimit(1)
-            }
-            Text("Your friend gets a sealed sleeve. When they open it, the record slides out with the song and links to play it.")
-                .font(.system(size: 11)).lineSpacing(2)
-                .foregroundStyle(ink.ink3)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 8) {
-                Button { model.copyShareLink() } label: {
-                    Text(model.copied ? "Link copied" : "Copy link")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(ink.buttonInk)
-                        .frame(maxWidth: .infinity, minHeight: 36)
-                        .background(Capsule().fill(ink.button))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(PressStyle(pressed: 0.97))
-                if let url = model.shareURL() {
-                    // Messages, AirDrop, Mail…: friends without an account get the sealed record as a link.
-                    ShareLink(item: url, subject: Text(model.track.title),
-                              message: Text("I sent you a record: \(model.track.title) by \(model.track.artist)")) {
-                        Text("Share…")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(ink.ink)
-                            .frame(maxWidth: .infinity, minHeight: 36)
-                            .background(Capsule().fill(ink.track))
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(PressStyle(pressed: 0.97))
-                }
-            }
-            FriendSendRow(model: model, ink: ink)
-        }
-        .padding(16)
-        .frame(width: 344, alignment: .leading)
-        .background(GlassBackground(ink: ink, radius: 24))
-    }
-}
-
-/// Send the current song straight to a friend's in-app inbox.
-private struct FriendSendRow: View {
-    @Environment(\.playerStyle) private var pstyle
-    let model: PlayerModel
-    let ink: Ink
-    @ObservedObject private var social = SocialService.shared
-    @State private var status: String?
-
-    var body: some View {
-        switch social.state {
-        case .notConfigured:
-            EmptyView()
-        case .signedOut, .needsUsername:
-            Text(social.setupError == nil ? "Setting up sharing with friends…" : "Sharing with friends isn't available right now.")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(ink.ink3)
-        case .signedIn:
-            VStack(alignment: .leading, spacing: 8) {
-                Text(status ?? "Send to a friend in the app")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(status == nil ? ink.ink3 : pstyle.accentColor.color)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(social.friends) { f in
-                            Button { send(to: f) } label: {
-                                HStack(spacing: 6) {
-                                    PetSprite(pet: PetSpec.all.firstIndex(where: { $0.name == f.pet }) ?? 0, pose: PetPose(), pixel: 1.25)
-                                    Text("@" + f.username).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
-                                }
-                                .padding(.horizontal, 10).frame(height: 30)
-                                .background(Capsule().fill(ink.track))
-                            }
-                            .buttonStyle(PressStyle(pressed: 0.95))
-                        }
-                        Button { LibraryWindowController.shared.show(.friends, page: .friends) } label: {
-                            Label(social.friends.isEmpty ? "Add friends" : "Add", systemImage: "plus")
-                                .font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink2)
-                                .padding(.horizontal, 10).frame(height: 30)
-                                .background(Capsule().strokeBorder(ink.track, lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
-    private func send(to f: Profile) {
-        guard !(model.isLive && model.track.sourceID == nil) else { status = "Play a song first"; return }
-        status = "Sending to @\(f.username)…"
-        social.send(model.track, to: f, message: "", pet: PetSpec.at(model.pet).name) { err in
-            status = err ?? "Sent “\(model.track.title)” to @\(f.username)"
-        }
-    }
-}
 
 private struct CratePanel: View {
     @Environment(\.playerStyle) private var pstyle

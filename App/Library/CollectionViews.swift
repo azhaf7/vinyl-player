@@ -31,7 +31,7 @@ struct SongRow: View {
             .help("Play")
             LikeButton(track: entry.track)
             AddToPlaylistMenu(entry: entry)
-            SendMenu(track: entry.track, model: model)
+            ShareMenu(track: entry.track, model: model)
         }
         .padding(.vertical, 3)
     }
@@ -268,7 +268,7 @@ struct CrateDigView: View {
                             .buttonStyle(.borderedProminent)
                             LikeButton(track: e.track, size: 16)
                             AddToPlaylistMenu(entry: e)
-                            SendMenu(track: e.track, model: model)
+                            ShareMenu(track: e.track, model: model)
                         }
                         .padding(.top, 6)
                     }

@@ -12,16 +12,6 @@ struct SharedRecord: Codable, Hashable {
     var artworkURL: String?
     var message: String?
 
-    init(share: Share) {
-        title = share.title
-        artist = share.artist
-        from = share.sender.map { $0.name } ?? "A friend"
-        pet = share.pet ?? ""
-        spotifyID = share.spotifyId
-        artworkURL = share.artworkUrl
-        message = share.message
-    }
-
     init?(url: URL) {
         guard let comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
         var items = comps.queryItems ?? []

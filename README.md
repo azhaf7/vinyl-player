@@ -90,20 +90,15 @@ The app needs to have run at least once first.
 - **Colours:** the 🎨 button on the turntable opens the themes.
 - **Keyboard shortcuts (anywhere):** ⌃⌥Space play/pause, ⌃⌥→ next, ⌃⌥← previous, ⌃⌥L like. You can turn them off in Settings.
 - **Library (⌘L in the menu):**
-  - **Friends:**
-    - **Inbox:** records friends sent you, and records you opened from links.
-    - **Friends:** add friends by their code, send them songs, and see what they're spinning right now ("Listen along" plays it in your Spotify). Turn off "Show friends what I'm listening to" in Settings to keep yours private.
-    - **Your Code:** your friend code.
-  - **Collection:**
+  - **Collection** (what you chose to keep):
     - **Liked** and **Playlists:** make playlists from any song (the playlist button on a row) and play them in order through Spotify or the sample songs.
     - **Crate:** flip through your records like a crate at a record shop, with ‹ › or the arrow keys.
-  - **History:**
+    - **Received:** records people sent you as links and you opened on this Mac.
+  - **History** (kept automatically):
     - **Played:** every song you've played, with your top songs.
     - **Weekly Recap:** your week in minutes, top artist and top songs, as a card you can copy, save or share.
   - **Settings:** everything else.
-- **Sharing:** open the share panel (⇧):
-  - **Share…** sends a sealed-record link through Messages, AirDrop or Mail. Anyone can open it in a browser; friends with the app can open it on their turntable, and it's saved in their Inbox.
-  - **Send to a friend** puts the record straight into a friend's in-app Inbox, with a notification. There's no login: each Mac gets a friend code like `@mochi4821`, and friends add each other's code once. This needs the one-time setup below.
+- **Sharing:** the share button (⇧) opens the Mac's share menu: AirDrop, Messages, Mail, Notes, Copy Link and the rest. The song goes as a sealed-record link that anyone can open in a browser; people with the app can open it on their turntable, and it's kept under Collection → Received. Song rows in the library have the same Share button.
 - **Move the player:** drag it from anywhere: the record, the pet or the buttons. A click still works as a click; only an actual drag moves it.
 - **Menu bar → Float Above Windows:** keeps it on top instead of on the desktop.
 - **Menu bar → Move Player to Top Right:** brings it back if it gets lost.
@@ -126,20 +121,6 @@ Vercel redeploys automatically whenever `web/` changes.
 Any static host works: upload the `web/` folder and paste the page's address into **Settings… → Sharing**.
 
 [Netlify Drop](https://app.netlify.com/drop) works: drag the `web` folder onto it. GitHub Pages also works if the repository is public.
-
-## Accounts and sharing (one-time setup)
-
-In-app sending between friends uses a free [Supabase](https://supabase.com) project. Nobody has to log in; only you (whoever builds the app) set this up once:
-
-1. Create a free project at supabase.com.
-2. **SQL Editor → New query:** paste the contents of `supabase/schema.sql` and click **Run**.
-3. **Authentication → Sign In / Providers:** turn on **Allow anonymous sign-ins**.
-4. **Project Settings → API:** copy the **Project URL** and the **anon public** key into `App/Social/SocialConfig.swift`.
-5. Build again. Each Mac then gets its own friend code automatically.
-
-The anon key is meant to be public. The rules in `schema.sql` make sure people can only read records sent to or from them, and can only send as themselves.
-
-Without this setup, everything else works, including sharing records as links.
 
 ## Project layout
 
