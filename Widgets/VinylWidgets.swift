@@ -116,9 +116,9 @@ struct VinylWidgetView: View {
 }
 
 private func petPose(_ e: VinylEntry) -> PetPose {
-    if e.asleep { return PetPose(arms: .down, eyes: .sleep, headphones: e.snap.headphones) }
-    return e.snap.isPlaying ? PetPose(arms: .up, eyes: .happy, headphones: e.snap.headphones)
-                            : PetPose(arms: .down, eyes: .open, headphones: e.snap.headphones)
+    if e.asleep { return PetPose(arms: .down, eyes: .sleep, headphones: e.snap.headphones, sunglasses: e.snap.sunglasses == true) }
+    return e.snap.isPlaying ? PetPose(arms: .up, eyes: .happy, headphones: e.snap.headphones, sunglasses: e.snap.sunglasses == true)
+                            : PetPose(arms: .down, eyes: .open, headphones: e.snap.headphones, sunglasses: e.snap.sunglasses == true)
 }
 
 private func statusLine(_ s: WidgetSnapshot) -> String {

@@ -159,6 +159,9 @@
     const q = encodeURIComponent(p.title + ' ' + p.artist);
     $('spotifyLink').href = p.spotify ? 'https://open.spotify.com/track/' + p.spotify : 'https://open.spotify.com/search/' + q;
     $('appleLink').href = 'https://music.apple.com/search?term=' + q;
+    const app = [['song', p.title], ['by', p.artist], ['from', p.from], ['pet', p.pet], ['spotify', p.spotify]]
+      .filter(([, v]) => v).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
+    $('appLink').href = 'vinyl://record?' + app;
     document.title = opened ? p.title + ' · ' + p.artist : fromLine;
     page.style.setProperty('--tint', FALLBACK_TINT);
     page.style.removeProperty('--art');

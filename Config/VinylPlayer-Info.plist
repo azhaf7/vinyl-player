@@ -4,6 +4,17 @@
 <dict>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Vinyl Player shows the song playing in Spotify or Apple Music and lets you play, pause and skip from the turntable.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Shared record</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vinyl</string>
+			</array>
+		</dict>
+	</array>
 	<key>VinylAppGroup</key>
 	<string>$(TeamIdentifierPrefix)vinylplayer</string>
 </dict>

@@ -30,8 +30,12 @@ final class PlayerModel {
     var shareOpen = false
     var copied = false
     private(set) var busy = false
-    private(set) var phonesUnlocked = false
-    private(set) var wearPhones = false
+    private(set) var wearPhones = true
+    private(set) var wearShades = true
+    /// Total listening time; unlocks pets and accessories. Updated every few seconds.
+    private(set) var listenedMinutes = 0.0
+    /// Set when something new unlocks, for a moment of celebration in the crate.
+    var justUnlocked: String?
     private(set) var elapsedSec = 0
     /// Bumped when the music source's track list changes.
     private(set) var tracksVersion = 0
@@ -121,9 +125,12 @@ final class PlayerModel {
         rpm = d.integer(forKey: "rpm") == 45 ? 45 : 33
         vinyl = min(max(0, d.integer(forKey: "vinyl")), VinylStyle.all.count - 1)
         pet = min(max(0, d.integer(forKey: "pet")), PetSpec.all.count - 1)
-        phonesUnlocked = d.bool(forKey: "phonesUnlocked")
-        wearPhones = d.bool(forKey: "wearPhones")
+        if d.object(forKey: "wearPhones") != nil { wearPhones = d.bool(forKey: "wearPhones") }
+        if d.object(forKey: "wearShades") != nil { wearShades = d.bool(forKey: "wearShades") }
         listened = d.double(forKey: "listenedMs")
+        // Earlier versions unlocked headphones after 45 s; keep that unlock.
+        if d.bool(forKey: "phonesUnlocked") { listened = max(listened, PetUnlock.headphones.minutes * 60_000) }
+        listenedMinutes = listened / 60_000
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
                                                           object: nil, queue: .main) { [weak self] _ in
             self?.reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -192,8 +199,10 @@ final class PlayerModel {
         if want != crackling { crackling = want; SoundEngine.shared.crackle(want) }
 
         if motor {
+            let before = listened
             listened += dt
-            if !phonesUnlocked && listened > 45_000 { phonesUnlocked = true; wearPhones = true; save(); onStateChange?() }
+            if Int(listened / 5000) != Int(before / 5000) { listenedMinutes = listened / 60_000 }
+            checkUnlocks(from: before)
             if Date().timeIntervalSince(lastSave) > 15 { save() }
         }
 
@@ -315,8 +324,35 @@ final class PlayerModel {
 
     func setRPM(_ r: Int) { rpm = r; save() }
     func selectVinyl(_ i: Int) { vinyl = i; save(); stateChanged() }
-    func selectPet(_ i: Int) { pet = i; save(); stateChanged() }
+    func selectPet(_ i: Int) { guard isPetUnlocked(i) else { return }; pet = i; save(); stateChanged() }
     func toggleHeadphones() { wearPhones.toggle(); save(); stateChanged() }
+    func toggleSunglasses() { wearShades.toggle(); save(); stateChanged() }
+
+    // MARK: Unlocks
+
+    func isUnlocked(_ u: PetUnlock) -> Bool { listened >= u.minutes * 60_000 }
+    func isPetUnlocked(_ i: Int) -> Bool { PetSpec.at(i).unlockMinutes.map { listened >= $0 * 60_000 } ?? true }
+    var phonesUnlocked: Bool { isUnlocked(.headphones) }
+    var headphonesOn: Bool { isUnlocked(.headphones) && wearPhones }
+    var sunglassesOn: Bool { isUnlocked(.sunglasses) && wearShades }
+
+    /// The next thing to unlock and the minutes it needs.
+    var nextUnlock: (title: String, minutes: Double)? {
+        var all: [(String, Double)] = PetUnlock.allCases.map { ($0.title, $0.minutes) }
+        all += PetSpec.all.compactMap { p in p.unlockMinutes.map { (p.name + " the " + p.id, $0) } }
+        return all.filter { $0.1 * 60_000 > listened }.min(by: { $0.1 < $1.1 }).map { (title: $0.0, minutes: $0.1) }
+    }
+
+    private func checkUnlocks(from before: Double) {
+        var thresholds: [(String, Double)] = PetUnlock.allCases.map { ($0.title, $0.minutes) }
+        thresholds += PetSpec.all.compactMap { p in p.unlockMinutes.map { (p.name, $0) } }
+        for (title, minutes) in thresholds where before < minutes * 60_000 && listened >= minutes * 60_000 {
+            justUnlocked = title
+            hop = 1; happyUntil = clock + 1800
+            listenedMinutes = listened / 60_000
+            save(); stateChanged()
+        }
+    }
 
     func petTapped() {
         pausedFor = 0; lid = 1; hop = 1; happyUntil = clock + 900
@@ -494,7 +530,7 @@ final class PlayerModel {
         r.sway = sway; r.lift = bounce + liftY; r.tilt = tilt
         r.sx = sx; r.sy = sy; r.face = pFace
         r.shadow = max(0.4, 1 - (bounce + liftY) / 30)
-        r.pose = PetPose(arms: arms, eyes: eyes, legs: legs, headphones: phonesUnlocked && wearPhones)
+        r.pose = PetPose(arms: arms, eyes: eyes, legs: legs, headphones: headphonesOn, sunglasses: sunglassesOn)
         if r != petRender { petRender = r }
     }
 
@@ -535,7 +571,7 @@ final class PlayerModel {
         if !isLive { d.set(index, forKey: "trackIndex") }
         d.set(rpm, forKey: "rpm")
         d.set(vinyl, forKey: "vinyl"); d.set(pet, forKey: "pet")
-        d.set(phonesUnlocked, forKey: "phonesUnlocked"); d.set(wearPhones, forKey: "wearPhones")
+        d.set(wearPhones, forKey: "wearPhones"); d.set(wearShades, forKey: "wearShades")
         d.set(listened, forKey: "listenedMs")
         lastSave = Date()
     }

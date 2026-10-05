@@ -24,6 +24,7 @@ struct WidgetSnapshot: Codable, Equatable {
     var pausedSince: Date?
     /// Following Spotify / Apple Music: `upNext` holds recently played songs instead.
     var live: Bool? = nil
+    var sunglasses: Bool? = nil
 
     var tint: RGB { RGB(hex: tintHex) }
 

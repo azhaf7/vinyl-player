@@ -30,6 +30,7 @@ final class Preferences: ObservableObject {
     @Published var shareBaseURL: String { didSet { d.set(shareBaseURL, forKey: "shareBaseURL") } }
     @Published var senderName: String { didSet { d.set(senderName, forKey: "senderName") } }
     @Published var musicSource: MusicSource { didSet { d.set(musicSource.rawValue, forKey: "musicSource") } }
+    @Published var notchMode: Bool { didSet { d.set(notchMode, forKey: "notchMode") } }
 
     /// Where the Shared Record page (web/shared-record) is hosted.
     static let defaultShareBaseURL = "https://azhaf7.github.io/vinyl-player/shared-record/"
@@ -46,6 +47,8 @@ final class Preferences: ObservableObject {
         shareBaseURL = d.string(forKey: "shareBaseURL") ?? Preferences.defaultShareBaseURL
         senderName = d.string(forKey: "senderName") ?? ""
         musicSource = MusicSource(rawValue: d.string(forKey: "musicSource") ?? "") ?? .nowPlaying
+        // On by default on MacBooks with a notch.
+        notchMode = d.object(forKey: "notchMode") as? Bool ?? NotchController.screenHasNotch
     }
 
     var launchAtLogin: Bool {

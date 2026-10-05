@@ -7,7 +7,12 @@ struct PetSpec {
     let name: String
     let palette: [Character: RGB]
     let head: [String]
+    /// Panda: dark patches around the eyes and dark arms/feet.
     var panda = false
+    /// Recolours the pixels around the eyes (e.g. the penguin's white face).
+    var eyePatch: Character? = nil
+    /// Listening time (minutes) needed before this pet can be picked; nil = always available.
+    var unlockMinutes: Double? = nil
 
     static let body: [String] = [
         ".kooooooooooook.", ".kooooooooooook.", ".kooooooooooook.", ".kooooooooooook.", ".kooooooooooook.",
@@ -17,7 +22,8 @@ struct PetSpec {
 
     static func pal(k: String, o: String, l: String, p: String, d: String) -> [Character: RGB] {
         ["k": RGB(hex: k), "o": RGB(hex: o), "l": RGB(hex: l), "p": RGB(hex: p), "w": .white,
-         "h": RGB(hex: "#2b2b30"), "c": RGB(hex: "#e0565b"), "d": RGB(hex: d)]
+         "h": RGB(hex: "#2b2b30"), "c": RGB(hex: "#e0565b"), "d": RGB(hex: d),
+         "g": RGB(hex: "#121214"), "s": RGB(hex: "#5b6b8c")]
     }
 
     static let all: [PetSpec] = [
@@ -29,6 +35,10 @@ struct PetSpec {
                 head: ["................", "...kkkk..kkkk...", "..kooookkoooook."]),
         PetSpec(id: "bunny", name: "Tofu", palette: pal(k: "#3b3046", o: "#ece6f5", l: "#ffffff", p: "#f5a3c0", d: "#cfc6de"),
                 head: ["...kk......kk...", "...kpk....kpk...", "...kpk....kpk...", "...kpk....kpk...", "..kkpkkkkkkpkk.."]),
+        PetSpec(id: "fox", name: "Kiki", palette: pal(k: "#3a1f14", o: "#e8783a", l: "#fff4e6", p: "#f59a9a", d: "#c45f28"),
+                head: [".k............k.", ".kok........kok.", ".kookkkkkkkkook."], unlockMinutes: 30),
+        PetSpec(id: "penguin", name: "Nori", palette: pal(k: "#15171c", o: "#323844", l: "#f4f4f4", p: "#f6a96b", d: "#262b35"),
+                head: ["................", "....kkkkkkkk....", "..kkkkkkkkkkkk.."], eyePatch: "l", unlockMinutes: 120),
     ]
 
     static func at(_ i: Int) -> PetSpec { all[max(0, min(all.count - 1, i))] }
@@ -36,6 +46,14 @@ struct PetSpec {
 
 enum PetArms: String { case down, up }
 enum PetEyes: String { case open, look, blink, happy, sleep }
+
+/// Things unlocked by listening. Pets with `unlockMinutes` are unlocked the same way.
+enum PetUnlock: String, CaseIterable {
+    case headphones, sunglasses
+
+    var minutes: Double { self == .headphones ? 10 : 60 }
+    var title: String { self == .headphones ? "Headphones" : "Sunglasses" }
+}
 enum PetLegs: String { case stand = "", a, b }
 
 struct PetPose: Hashable {
@@ -43,6 +61,7 @@ struct PetPose: Hashable {
     var eyes: PetEyes = .open
     var legs: PetLegs = .stand
     var headphones = false
+    var sunglasses = false
 }
 
 /// Builds (and caches) one sprite frame as a 1-pixel-per-cell CGImage. Scale it with `.interpolation(.none)`.
@@ -52,7 +71,7 @@ final class PetSpriteCache {
     private let lock = NSLock()
 
     func image(pet: Int, pose: PetPose) -> CGImage? {
-        let key = "\(pet)|\(pose.arms.rawValue)|\(pose.eyes.rawValue)|\(pose.legs.rawValue)|\(pose.headphones)"
+        let key = "\(pet)|\(pose.arms.rawValue)|\(pose.eyes.rawValue)|\(pose.legs.rawValue)|\(pose.headphones)|\(pose.sunglasses)"
         lock.lock(); defer { lock.unlock() }
         if let img = cache[key] { return img }
         let img = Self.render(grid: Self.grid(pet: pet, pose: pose), palette: PetSpec.at(pet).palette)
@@ -89,9 +108,9 @@ final class PetSpriteCache {
                 set(R(7), c0 == 4 ? 3 : 12, "k")
                 set(R(8), 7, "p"); set(R(8), 8, "p")
             }
-            if P.panda {
+            if let patch: Character = P.panda ? "d" : P.eyePatch {
                 for r in 4...8 {
-                    for c in [c0 - 1, c0, c0 + 1, c0 + 2] where c >= 0 && c < 16 && g[R(r)][c] == "o" { g[R(r)][c] = "d" }
+                    for c in [c0 - 1, c0, c0 + 1, c0 + 2] where c >= 0 && c < 16 && g[R(r)][c] == "o" { g[R(r)][c] = patch }
                 }
             }
         }
@@ -109,6 +128,11 @@ final class PetSpriteCache {
             for c in [2, 3, 12, 13] { set(R(2) + ((c == 2 || c == 13) ? 1 : 0), c, "h") }
             for r in R(5)...R(7) { set(r, 0, "h"); set(r, 1, "h"); set(r, 14, "h"); set(r, 15, "h") }
             set(R(6), 0, "c"); set(R(6), 15, "c")
+        }
+        if pose.sunglasses && pose.eyes != .sleep {
+            for c in [3, 4, 5, 6, 9, 10, 11, 12] { set(R(5), c, "g"); set(R(6), c, "g") }
+            set(R(5), 7, "g"); set(R(5), 8, "g")
+            set(R(5), 4, "s"); set(R(5), 10, "s")
         }
         switch pose.legs {
         case .a: g[last - 1] = Array(".koook....koook."); g[last] = Array(".kkkkk....kkkkk.")

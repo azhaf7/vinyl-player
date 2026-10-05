@@ -178,6 +178,9 @@ a:hover { color: oklch(0.92 0.06 70); }
 }
 .btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.7); outline-offset: 3px; }
 
+.app-link { font-size: 13px; color: rgba(255, 255, 255, 0.55); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.app-link:hover { color: rgba(255, 255, 255, 0.85); }
+
 @media (prefers-reduced-motion: reduce) {
   .page { transition: none; }
   .record-wrap { transition-duration: 1ms; }

@@ -76,15 +76,13 @@ final class DesktopPanel: NSPanel {
 final class DesktopPanelController: NSObject, NSWindowDelegate {
     private let model: PlayerModel
     private var panel: DesktopPanel?
-    private let driver: FrameDriver
 
     /// Room around the 344-wide column for the card's shadow; height leaves space for the panels below.
     static let margin: CGFloat = 40
-    static let size = NSSize(width: 344 + 2 * margin, height: margin + 58 + 384 + 12 + 230 + margin)
+    static let size = NSSize(width: 344 + 2 * margin, height: margin + 58 + 384 + 12 + 320 + margin)
 
     init(model: PlayerModel) {
         self.model = model
-        driver = FrameDriver { [weak model] dt in model?.tick(dt) }
         super.init()
     }
 
@@ -93,12 +91,12 @@ final class DesktopPanelController: NSObject, NSWindowDelegate {
     func show() {
         if panel == nil { build() }
         panel?.orderFrontRegardless()
-        driver.setFast(true)
+        FrameDriver.shared.want(true, for: "desktop")
     }
 
     func hide() {
         panel?.orderOut(nil)
-        driver.setFast(false)
+        FrameDriver.shared.want(false, for: "desktop")
     }
 
     func toggle() { isVisible ? hide() : show() }
@@ -129,7 +127,6 @@ final class DesktopPanelController: NSObject, NSWindowDelegate {
         } else {
             resetPosition()
         }
-        driver.attach(to: host)
     }
 
     func windowDidMove(_ notification: Notification) {
@@ -140,44 +137,49 @@ final class DesktopPanelController: NSObject, NSWindowDelegate {
     /// Full frame rate only while someone can see it; otherwise a slow tick keeps playback time moving.
     func windowDidChangeOcclusionState(_ notification: Notification) {
         guard let p = panel else { return }
-        driver.setFast(p.occlusionState.contains(.visible))
+        FrameDriver.shared.want(p.occlusionState.contains(.visible), for: "desktop")
     }
 }
 
-/// One clock for all motion: the display's refresh when visible, a 4 Hz timer when hidden.
+/// One clock for all motion: the display's refresh while the player or the notch is visible,
+/// a 4 Hz timer otherwise (so playback time keeps moving).
 final class FrameDriver: NSObject {
-    private let onTick: (Double) -> Void
+    static let shared = FrameDriver()
+
+    var onTick: ((Double) -> Void)?
     private var link: CADisplayLink?
     private var slow: Timer?
+    private var reasons: Set<String> = []
     private var last = CACurrentMediaTime()
 
-    init(onTick: @escaping (Double) -> Void) {
-        self.onTick = onTick
+    private override init() {
         super.init()
-        setFast(false)
+        update()
     }
 
-    func attach(to view: NSView) {
-        link?.invalidate()
-        let l = view.displayLink(target: self, selector: #selector(frame(_:)))
-        l.add(to: .main, forMode: .common)
-        link = l
-        setFast(true)
+    /// `reason` is who needs smooth motion, e.g. "desktop" or "notch".
+    func want(_ fast: Bool, for reason: String) {
+        if fast { reasons.insert(reason) } else { reasons.remove(reason) }
+        update()
     }
 
-    func setFast(_ fast: Bool) {
-        if let link {
-            link.isPaused = !fast
-        }
-        let wantSlow = !fast || link == nil
-        if wantSlow, slow == nil {
-            let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.step() }
-            RunLoop.main.add(t, forMode: .common)
-            slow = t
-        } else if !wantSlow {
+    private func update() {
+        if !reasons.isEmpty {
+            if link == nil, let screen = NSScreen.main ?? NSScreen.screens.first {
+                let l = screen.displayLink(target: self, selector: #selector(frame(_:)))
+                l.add(to: .main, forMode: .common)
+                link = l
+            }
+            link?.isPaused = false
             slow?.invalidate(); slow = nil
+        } else {
+            link?.isPaused = true
+            if slow == nil {
+                let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.step() }
+                RunLoop.main.add(t, forMode: .common)
+                slow = t
+            }
         }
-        last = CACurrentMediaTime()
     }
 
     @objc private func frame(_ l: CADisplayLink) { step() }
@@ -186,7 +188,7 @@ final class FrameDriver: NSObject {
         let now = CACurrentMediaTime()
         let dt = (now - last) * 1000
         last = now
-        if dt > 0 { onTick(dt) }
+        if dt > 0 { onTick?(dt) }
     }
 }
 

@@ -71,8 +71,9 @@ final class WidgetBridge {
                                   isPlaying: model.pendingPlaying,
                                   elapsed: Double(model.elapsedSec), duration: model.duration,
                                   side: model.side, petIndex: model.pet, vinylIndex: model.vinyl,
-                                  headphones: model.phonesUnlocked && model.wearPhones,
-                                  updated: Date(), pausedSince: model.pausedSince, live: model.isLive)
+                                  headphones: model.headphonesOn,
+                                  updated: Date(), pausedSince: model.pausedSince, live: model.isLive,
+                                  sunglasses: model.sunglassesOn)
         if let last = lastSnapshot, Self.same(last, snap) { return }
         lastSnapshot = snap
         SharedStore.writeSnapshot(snap)

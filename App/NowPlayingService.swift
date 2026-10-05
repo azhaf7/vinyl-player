@@ -204,22 +204,22 @@ final class NowPlayingService: PlaybackService {
         switch s {
         case .spotify:
             body = """
-            set t to current track
-            return st & linefeed & (name of t) & linefeed & (artist of t) & linefeed & (album of t) & linefeed & (((duration of t) / 1000) as text) & linefeed & (player position as text) & linefeed & (artwork url of t) & linefeed & (id of t)
+            set vpTrack to current track
+            return vpState & linefeed & (name of vpTrack) & linefeed & (artist of vpTrack) & linefeed & (album of vpTrack) & linefeed & (((duration of vpTrack) / 1000) as text) & linefeed & (player position as text) & linefeed & (artwork url of vpTrack) & linefeed & (id of vpTrack)
             """
         case .music:
             body = """
-            set t to current track
-            return st & linefeed & (name of t) & linefeed & (artist of t) & linefeed & (album of t) & linefeed & ((duration of t) as text) & linefeed & (player position as text) & linefeed & "" & linefeed & (persistent ID of t)
+            set vpTrack to current track
+            return vpState & linefeed & (name of vpTrack) & linefeed & (artist of vpTrack) & linefeed & (album of vpTrack) & linefeed & ((duration of vpTrack) as text) & linefeed & (player position as text) & linefeed & "" & linefeed & (persistent ID of vpTrack)
             """
         }
         let source = """
         tell application "\(s.appName)"
             with timeout of 2 seconds
                 if player state is playing then
-                    set st to "playing"
+                    set vpState to "playing"
                 else if player state is paused then
-                    set st to "paused"
+                    set vpState to "paused"
                 else
                     return "stopped"
                 end if

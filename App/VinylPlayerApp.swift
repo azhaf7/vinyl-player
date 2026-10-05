@@ -26,13 +26,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var bridge: WidgetBridge?
     private var levelObserver: AnyCancellable?
     private var sourceObserver: AnyCancellable?
+    private var notchObserver: AnyCancellable?
+    private(set) lazy var notch = NotchController(model: model)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        FrameDriver.shared.onTick = { [weak self] dt in self?.model.tick(dt) }
         bridge = WidgetBridge(model: model)
         sourceObserver = Preferences.shared.$musicSource.removeDuplicates().sink { [weak self] source in
             DispatchQueue.main.async { self?.connect(source) }
         }
         panel.show()
+        notchObserver = Preferences.shared.$notchMode.removeDuplicates().sink { [weak self] on in
+            DispatchQueue.main.async { on ? self?.notch.show() : self?.notch.hide() }
+        }
         levelObserver = Preferences.shared.$floatAboveWindows.sink { [weak self] _ in
             DispatchQueue.main.async { self?.panel.applyLevel() }
         }
@@ -42,6 +48,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         switch source {
         case .nowPlaying: model.use(NowPlayingService())
         case .samples: model.use(MockPlaybackService())
+        }
+    }
+
+    /// vinyl://record?song=…: someone shared a record with us.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where url.scheme == "vinyl" {
+            if let record = SharedRecord(url: url) { SharedRecordWindowController.shared.show(record) }
         }
     }
 
@@ -69,6 +82,7 @@ private struct MenuContent: View {
         Button(app.panel.isVisible ? "Hide Player" : "Show Player") { app.panel.toggle() }
         Button("Move Player to Top Right") { app.panel.show(); app.panel.resetPosition() }
         Toggle("Float Above Windows", isOn: $prefs.floatAboveWindows)
+        Toggle("Show in the Notch", isOn: $prefs.notchMode)
         Divider()
         Toggle("Pet Operates the Tonearm", isOn: $prefs.petOperatesArm)
         Toggle("Arm Follows the Groove", isOn: $prefs.armFollowsGroove)
@@ -96,6 +110,7 @@ private struct SettingsView: View {
             Section("Player") {
                 Toggle("Open at login", isOn: Binding(get: { prefs.launchAtLogin }, set: { prefs.launchAtLogin = $0 }))
                 Toggle("Float above other windows", isOn: $prefs.floatAboveWindows)
+                Toggle("Show in the notch (record and pet at the top of the screen)", isOn: $prefs.notchMode)
                 Toggle("Pet operates the tonearm", isOn: $prefs.petOperatesArm)
                 Toggle("Tonearm follows the groove", isOn: $prefs.armFollowsGroove)
                 Toggle("Needle drop and crackle", isOn: $prefs.sound)

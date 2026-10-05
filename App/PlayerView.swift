@@ -439,34 +439,74 @@ private struct CratePanel: View {
 
     private var pets: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 0) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 10) {
                 ForEach(Array(PetSpec.all.enumerated()), id: \.offset) { i, p in
-                    VStack(spacing: 6) {
+                    let open = model.isPetUnlocked(i)
+                    VStack(spacing: 5) {
                         ZStack(alignment: .bottom) {
                             RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.06))
-                            PetSprite(pet: i, pose: PetPose()).padding(.bottom, 8)
+                            PetSprite(pet: i, pose: PetPose(eyes: open ? .open : .sleep), pixel: 2.5)
+                                .opacity(open ? 1 : 0.3)
+                                .saturation(open ? 1 : 0)
+                                .padding(.bottom, 6)
+                            if !open {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(ink.ink2)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                                    .padding(7)
+                            }
                         }
-                        .frame(width: 66, height: 62)
+                        .frame(height: 60)
                         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(i == model.pet ? Tokens.accent.color : Color.white.opacity(0.08), lineWidth: i == model.pet ? 2 : 1))
-                        Text(p.name).font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink2)
+                        Text(open ? p.name : minutesLabel(p.unlockMinutes ?? 0))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(open ? ink.ink2 : ink.ink3)
                     }
                     .modifier(HoverLift())
                     .onTapGesture { model.selectPet(i) }
-                    if i < PetSpec.all.count - 1 { Spacer(minLength: 8) }
+                    .help(open ? p.name : "\(p.name) unlocks after \(minutesLabel(p.unlockMinutes ?? 0)) of listening")
                 }
             }
             .padding(2)
-            if model.phonesUnlocked {
-                Text("Unlocked: headphones · " + (model.wearPhones ? "On" : "Off"))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(ink.ink)
-                    .padding(.horizontal, 10).padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(ink.dark ? Color.white.opacity(0.06) : Color.black.opacity(0.05)))
-                    .contentShape(Rectangle())
-                    .onTapGesture { model.toggleHeadphones() }
+
+            HStack(spacing: 8) {
+                accessory(.headphones, on: model.wearPhones) { model.toggleHeadphones() }
+                accessory(.sunglasses, on: model.wearShades) { model.toggleSunglasses() }
             }
+
+            Text(progressLine)
+                .font(.system(size: 10))
+                .foregroundStyle(ink.ink3)
         }
+    }
+
+    private var progressLine: String {
+        let listened = "Listened " + minutesLabel(model.listenedMinutes)
+        if let next = model.nextUnlock {
+            return listened + " · next: " + next.title + " at " + minutesLabel(next.minutes)
+        }
+        return listened + " · everything unlocked"
+    }
+
+    private func minutesLabel(_ m: Double) -> String {
+        m >= 60 ? (m.truncatingRemainder(dividingBy: 60) < 1 ? "\(Int(m / 60)) h" : String(format: "%.1f h", m / 60)) : "\(Int(m)) min"
+    }
+
+    private func accessory(_ u: PetUnlock, on: Bool, toggle: @escaping () -> Void) -> some View {
+        let open = model.isUnlocked(u)
+        return HStack(spacing: 6) {
+            Image(systemName: open ? (on ? "checkmark.circle.fill" : "circle") : "lock.fill")
+                .foregroundStyle(open && on ? Tokens.accent.color : ink.ink3)
+            Text(open ? u.title : u.title + " · " + minutesLabel(u.minutes))
+                .foregroundStyle(open ? ink.ink : ink.ink3)
+        }
+        .font(.system(size: 11, weight: .semibold))
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10).fill(ink.dark ? Color.white.opacity(0.06) : Color.black.opacity(0.05)))
+        .contentShape(Rectangle())
+        .onTapGesture { if open { toggle() } }
     }
 }
 

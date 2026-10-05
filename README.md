@@ -81,6 +81,9 @@ The app needs to have run at least once first.
   - **Pets:** pick Mochi, Bao, Pip or Tofu. Headphones unlock after a while of listening.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
+- **Notch:** on MacBooks with a notch, a tiny spinning record and the pet sit beside it at the top of the screen. Hover over it to see the song, the controls and the progress. Turn it on or off with **Show in the Notch** in the menu bar menu.
+- **Unlocks:** listening unlocks headphones (10 min), Kiki the fox (30 min), sunglasses (1 h) and Nori the penguin (2 h). See your progress in the crate's **Pets** tab.
+- **Shared records:** the share page has an "Open it on your turntable" link for friends who have the app. It opens the record in Vinyl Player.
 - **Move the player:** drag it from anywhere: the record, the pet or the buttons. A click still works as a click; only an actual drag moves it.
 - **Menu bar → Float Above Windows:** keeps it on top instead of on the desktop.
 - **Menu bar → Move Player to Top Right:** brings it back if it gets lost.
