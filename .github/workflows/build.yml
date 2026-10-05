@@ -1,0 +1,50 @@
+name: Build Mac app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild -project VinylPlayer.xcodeproj -target VinylPlayer -configuration Release \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
+            SYMROOT="$PWD/build" build 2>&1 | tee build.log | grep -E "error:|warning: .*(deprecated|unused)|BUILD" || true
+          test -d "build/Release/Vinyl Player.app"
+
+      - name: Show errors
+        if: failure()
+        run: grep -E "error:" build.log | sort -u | head -100
+
+      - name: Package
+        run: |
+          cd build/Release
+          ditto -c -k --keepParent "Vinyl Player.app" "$GITHUB_WORKSPACE/VinylPlayer.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VinylPlayer
+          path: VinylPlayer.zip
+
+      - name: Publish download
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest VinylPlayer.zip --prerelease --target "$GITHUB_SHA" \
+            --title "Vinyl Player (latest build)" \
+            --notes "Unsigned test build of the latest commit. See README → Install the test build."
