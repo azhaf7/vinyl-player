@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+html,body{margin:0;background:#141416;-webkit-font-smoothing:antialiased}
+a{color:oklch(0.8 0.08 250)}a:hover{color:oklch(0.9 0.06 250)}
+</style>
+<script src="vinyl-shared.js"></script>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;justify-content:center;padding:48px;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif">
+
+  <div data-screen-label="iPhone home screen" style="position:relative;width:393px;height:852px;border-radius:56px;overflow:hidden;flex:none;background:radial-gradient(70% 45% at 20% 18%, oklch(0.55 0.1 60) 0%, transparent 70%), radial-gradient(70% 50% at 85% 75%, oklch(0.42 0.09 300) 0%, transparent 70%), #1c1820;box-shadow:0 0 0 10px #0c0c0e, 0 0 0 11px #2a2a2e, 0 40px 80px rgba(0,0,0,0.6)">
+    <div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:124px;height:36px;border-radius:20px;background:#000"></div>
+    <div style="position:absolute;left:32px;top:17px;font-size:17px;font-weight:600;color:#fff">9:41</div>
+
+    <div data-screen-label="Medium widget" style="position:absolute;left:14px;top:72px;width:364px;height:170px;border-radius:24px;overflow:hidden;background:linear-gradient(180deg, oklch(0.83 0.05 75), oklch(0.76 0.055 68));box-shadow:0 10px 30px rgba(0,0,0,0.35)">
+      <div ref="{{ medShadowRef }}" style="position:absolute;left:14px;top:14px;width:142px;height:142px;border-radius:50%;background:radial-gradient(circle, rgba(0,0,0,0.35) 60%, transparent 72%);transform:translateY(4px);filter:blur(4px)"></div>
+      <div ref="{{ medDiscRef }}" onClick="{{ toggle }}" style="cursor:pointer;will-change:transform;position:absolute;left:14px;top:14px;width:142px;height:142px;border-radius:50%;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px);box-shadow:0 0 0 2px #0a0a0b inset">
+        <div style="position:absolute;inset:38px;border-radius:50%;background:oklch(0.86 0.045 80)"></div>
+        <div style="position:absolute;inset:41px;border-radius:50%;background:{{ art }};box-shadow:0 0 0 1px rgba(0,0,0,0.5)"></div>
+        <div style="position:absolute;left:68px;top:68px;width:6px;height:6px;border-radius:50%;background:#08080a;box-shadow:0 0 0 1px rgba(255,255,255,0.3)"></div>
+        <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(transparent 0deg, rgba(255,255,255,0.12) 28deg, transparent 54deg, transparent 180deg, rgba(255,255,255,0.08) 206deg, transparent 232deg)"></div>
+      </div>
+      <div style="position:absolute;left:150px;top:16px;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 38% 32%, #4a4a50, #222226 70%)"></div>
+      <div style="position:absolute;left:160px;top:26px;width:0px;height:0px;transform:rotate({{ armDeg }}deg);transition:transform 700ms cubic-bezier(.34,1.22,.52,1)">
+        <div style="position:absolute;left:-1.5px;top:-6px;width:3px;height:102px;border-radius:2px;background:linear-gradient(90deg, #77777d, #f4f4f7 45%, #8a8a90)"></div>
+        <div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #ececf0, #8a8a90 65%)"></div>
+        <div style="position:absolute;left:0px;top:92px;width:0px;height:0px;transform:rotate(22deg)"><div style="position:absolute;left:-4px;top:0px;width:8px;height:14px;border-radius:2px;background:#2e2e33"></div></div>
+      </div>
+      <div style="position:absolute;left:184px;top:16px;right:14px;display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:oklch(0.42 0.06 60)">{{ status }}</div>
+        <div style="font-size:15px;font-weight:600;color:#241c16;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</div>
+        <div style="font-size:13px;color:oklch(0.4 0.04 60);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ artist }}</div>
+      </div>
+      <div style="position:absolute;left:184px;right:14px;top:84px;height:3px;border-radius:2px;background:rgba(36,28,22,0.15)"><div ref="{{ progRef }}" style="width:0%;height:100%;border-radius:2px;background:#241c16"></div></div>
+      <div style="position:absolute;left:178px;bottom:14px;display:flex;align-items:center;gap:6px">
+        <div onClick="{{ prevSong }}" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#241c16;transition:background 160ms ease, transform 160ms ease" style-hover="background:rgba(36,28,22,0.08)" style-active="transform:scale(0.9)"><svg width="14" height="12" viewBox="0 0 14 12"><rect x="0" y="0" width="2" height="12" rx="1" fill="currentColor"></rect><polygon points="13,0 13,12 3,6" fill="currentColor"></polygon></svg></div>
+        <div onClick="{{ toggle }}" style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#241c16;color:oklch(0.9 0.04 80);transition:transform 160ms ease" style-active="transform:scale(0.92)">
+          <sc-if value="{{ playing }}" hint-placeholder-val="{{ true }}"><svg width="14" height="16" viewBox="0 0 14 16"><rect x="1" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect><rect x="9" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect></svg></sc-if>
+          <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}"><svg width="14" height="16" viewBox="0 0 14 16" style="margin-left:2px"><polygon points="1,1 13,8 1,15" fill="currentColor"></polygon></svg></sc-if>
+        </div>
+        <div onClick="{{ nextSong }}" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#241c16;transition:background 160ms ease, transform 160ms ease" style-hover="background:rgba(36,28,22,0.08)" style-active="transform:scale(0.9)"><svg width="14" height="12" viewBox="0 0 14 12"><polygon points="1,0 1,12 11,6" fill="currentColor"></polygon><rect x="12" y="0" width="2" height="12" rx="1" fill="currentColor"></rect></svg></div>
+      </div>
+      <div ref="{{ petMedRef }}" style="position:absolute;right:16px;bottom:12px;width:36px;height:39px;transform-origin:50% 100%;will-change:transform">
+        <div style="position:absolute;left:0px;top:0px;width:2px;height:2px;box-shadow:{{ petMed }}"></div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:14px;top:262px;display:flex;gap:24px">
+      <div data-screen-label="Small widget" style="position:relative;width:170px;height:170px;border-radius:24px;overflow:hidden;flex:none;background:linear-gradient(180deg, oklch(0.83 0.05 75), oklch(0.76 0.055 68));box-shadow:0 10px 30px rgba(0,0,0,0.35)">
+        <div ref="{{ smDiscRef }}" onClick="{{ toggle }}" style="cursor:pointer;will-change:transform;position:absolute;left:12px;top:12px;width:118px;height:118px;border-radius:50%;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px);box-shadow:0 0 0 2px #0a0a0b inset, 0 4px 10px rgba(0,0,0,0.35)">
+          <div style="position:absolute;inset:32px;border-radius:50%;background:oklch(0.86 0.045 80)"></div>
+          <div style="position:absolute;inset:35px;border-radius:50%;background:{{ art }}"></div>
+          <div style="position:absolute;left:56px;top:56px;width:6px;height:6px;border-radius:50%;background:#08080a"></div>
+        </div>
+        <div style="position:absolute;left:142px;top:16px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 38% 32%, #4a4a50, #222226 70%)"></div>
+        <div style="position:absolute;left:150px;top:24px;width:0px;height:0px;transform:rotate({{ armDegSm }}deg);transition:transform 700ms cubic-bezier(.34,1.22,.52,1)">
+          <div style="position:absolute;left:-1.5px;top:-4px;width:3px;height:84px;border-radius:2px;background:linear-gradient(90deg, #77777d, #f4f4f7 45%, #8a8a90)"></div>
+          <div style="position:absolute;left:0px;top:76px;width:0px;height:0px;transform:rotate(22deg)"><div style="position:absolute;left:-3.5px;top:0px;width:7px;height:12px;border-radius:2px;background:#2e2e33"></div></div>
+        </div>
+        <div style="position:absolute;left:14px;bottom:12px;right:52px;display:flex;flex-direction:column;gap:1px">
+          <div style="font-size:12px;font-weight:600;color:#241c16;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</div>
+          <div style="font-size:11px;color:oklch(0.4 0.04 60);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ artist }}</div>
+        </div>
+        <div ref="{{ petSmRef }}" style="position:absolute;right:12px;bottom:12px;width:32px;height:35px;transform-origin:50% 100%;will-change:transform"><div style="position:absolute;left:0px;top:0px;width:2px;height:2px;box-shadow:{{ petMed }}"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2, 64px);gap:22px 34px;padding-top:6px">
+        <div style="width:64px;height:64px;border-radius:15px;background:rgba(255,255,255,0.18)"></div>
+        <div style="width:64px;height:64px;border-radius:15px;background:rgba(255,255,255,0.18)"></div>
+        <div style="width:64px;height:64px;border-radius:15px;background:rgba(255,255,255,0.18)"></div>
+        <div style="width:64px;height:64px;border-radius:15px;background:rgba(255,255,255,0.18)"></div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,0.7)"></div>
+  </div>
+
+  <div data-screen-label="iPhone app" style="position:relative;width:393px;height:852px;border-radius:56px;overflow:hidden;flex:none;background:radial-gradient(60% 40% at 25% 20%, oklch(0.32 0.06 285) 0%, transparent 70%), radial-gradient(60% 45% at 80% 85%, oklch(0.3 0.06 40) 0%, transparent 70%), #0e0e11;box-shadow:0 0 0 10px #0c0c0e, 0 0 0 11px #2a2a2e, 0 40px 80px rgba(0,0,0,0.6)">
+    <div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:124px;height:36px;border-radius:20px;background:#000;z-index:5"></div>
+    <div style="position:absolute;left:32px;top:17px;font-size:17px;font-weight:600;color:#fff">9:41</div>
+
+    <sc-if value="{{ showConnect }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:120px 28px 44px;box-sizing:border-box;gap:28px">
+        <div style="position:relative;width:200px;height:200px;flex:none">
+          <div style="position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px);box-shadow:0 0 0 3px #0a0a0b inset, 0 20px 40px rgba(0,0,0,0.5)">
+            <div style="position:absolute;inset:56px;border-radius:50%;background:oklch(0.86 0.045 80)"></div>
+            <div style="position:absolute;left:96px;top:96px;width:8px;height:8px;border-radius:50%;background:#08080a"></div>
+          </div>
+          <div style="position:absolute;right:-30px;bottom:-6px;width:48px;height:48px"><div style="position:absolute;left:0px;top:0px;width:3px;height:3px;box-shadow:{{ petBig }}"></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+          <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#fff;text-wrap:balance">Bring your music to the deck</div>
+          <div style="font-size:15px;line-height:1.45;color:rgba(255,255,255,0.6);text-wrap:pretty">Connect a service so the record shows what you’re playing, with real album art.</div>
+        </div>
+        <div style="margin-top:auto;width:100%;display:flex;flex-direction:column;gap:12px">
+          <div onClick="{{ startAuth }}" style="height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#1ed760;color:#000;font-size:16px;font-weight:700;transition:transform 160ms ease" style-active="transform:scale(0.97)">Continue with Spotify</div>
+          <div style="height:54px;border-radius:27px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;color:rgba(255,255,255,0.5);font-size:16px;font-weight:600">Apple Music <span style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.35)">Coming soon</span></div>
+          <div style="font-size:12px;line-height:1.4;color:rgba(255,255,255,0.4);text-align:center;padding:4px 12px 0">We only read what’s playing and send play, pause and skip.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showAuth }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:4">
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:22px 24px 40px;border-radius:28px 28px 0 0;background:#1c1c1f;display:flex;flex-direction:column;gap:18px;box-shadow:0 -10px 40px rgba(0,0,0,0.5)">
+          <div style="width:36px;height:5px;border-radius:3px;background:rgba(255,255,255,0.2);align-self:center"></div>
+          <div style="font-size:20px;font-weight:700;color:#fff">Connect to Spotify</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:8px;height:8px;margin-top:6px;border-radius:50%;background:#1ed760;flex:none"></div><div style="font-size:15px;line-height:1.4;color:rgba(255,255,255,0.85)">See the song, artist and album art you’re playing</div></div>
+            <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:8px;height:8px;margin-top:6px;border-radius:50%;background:#1ed760;flex:none"></div><div style="font-size:15px;line-height:1.4;color:rgba(255,255,255,0.85)">Play, pause and skip from the turntable <span style="color:rgba(255,255,255,0.45)">(Premium)</span></div></div>
+          </div>
+          <div onClick="{{ agree }}" style="height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#1ed760;color:#000;font-size:16px;font-weight:700">{{ agreeLabel }}</div>
+          <div onClick="{{ cancelAuth }}" style="text-align:center;font-size:15px;font-weight:600;color:rgba(255,255,255,0.6);cursor:pointer">Cancel</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showPlayer }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:62px">
+        <div style="width:100%;box-sizing:border-box;padding:0 24px 10px;display:flex;align-items:center;gap:10px">
+          <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.01em">Now playing</div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:rgba(30,215,96,0.14);color:#1ed760;font-size:12px;font-weight:600"><div style="width:6px;height:6px;border-radius:50%;background:#1ed760"></div>Spotify</div>
+          <div onClick="{{ disconnect }}" style="margin-left:auto;font-size:14px;color:rgba(255,255,255,0.5);cursor:pointer">Disconnect</div>
+        </div>
+        <dc-import name="Vinyl Player Widget" embedded="{{ true }}" hint-size="344px,442px"></dc-import>
+      </div>
+    </sc-if>
+    <div style="position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,0.7);z-index:5"></div>
+  </div>
+
+  <div data-screen-label="iPhone sleeve widgets" style="position:relative;width:393px;height:852px;border-radius:56px;overflow:hidden;flex:none;background:radial-gradient(70% 45% at 75% 15%, oklch(0.5 0.08 20) 0%, transparent 70%), radial-gradient(70% 50% at 15% 80%, oklch(0.4 0.07 230) 0%, transparent 70%), #17151a;box-shadow:0 0 0 10px #0c0c0e, 0 0 0 11px #2a2a2e, 0 40px 80px rgba(0,0,0,0.6)">
+    <div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:124px;height:36px;border-radius:20px;background:#000"></div>
+    <div style="position:absolute;left:32px;top:17px;font-size:17px;font-weight:600;color:#fff">9:41</div>
+
+    <div data-screen-label="Medium sleeve widget" style="position:absolute;left:14px;top:72px;width:364px;height:170px;border-radius:24px;overflow:hidden;background:{{ sleeveBg }};transition:background 800ms ease;box-shadow:0 0 0 0.5px rgba(255,255,255,0.1) inset, 0 10px 30px rgba(0,0,0,0.4)">
+      <div style="position:absolute;left:76px;top:16px;width:138px;height:138px">
+        <div ref="{{ sleeveDiscRef }}" onClick="{{ toggle }}" style="position:absolute;inset:0;border-radius:50%;cursor:pointer;will-change:transform;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px);box-shadow:0 0 0 2px #0a0a0b inset, 6px 8px 18px rgba(0,0,0,0.5)">
+            <div style="position:absolute;inset:41px;border-radius:50%;background:oklch(0.86 0.045 80)"></div>
+            <div style="position:absolute;inset:44px;border-radius:50%;background:{{ art }}"></div>
+            <div style="position:absolute;left:66px;top:66px;width:6px;height:6px;border-radius:50%;background:#08080a;box-shadow:0 0 0 1px rgba(255,255,255,0.3)"></div>
+          </div>
+          <div style="position:absolute;inset:0;border-radius:50%;pointer-events:none;background:conic-gradient(transparent 0deg, rgba(255,255,255,0.12) 28deg, transparent 54deg, transparent 180deg, rgba(255,255,255,0.08) 206deg, transparent 232deg)"></div>
+      </div>
+      <div style="position:absolute;left:16px;top:16px;width:138px;height:138px;border-radius:6px;background:{{ art }};box-shadow:0 0 0 0.5px rgba(255,255,255,0.2) inset, 4px 0 10px rgba(0,0,0,0.45), 0 6px 16px rgba(0,0,0,0.4)">
+        <div style="position:absolute;inset:0;border-radius:6px;background:linear-gradient(115deg, rgba(255,255,255,0.18), transparent 40%, rgba(0,0,0,0.12))"></div>
+      </div>
+      <div style="position:absolute;left:228px;top:18px;right:14px;display:flex;flex-direction:column;gap:3px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ sAccent }}">{{ status }}</div>
+        <div style="font-size:14px;font-weight:600;line-height:1.25;color:{{ sInk }};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ title }}</div>
+        <div style="font-size:12px;color:{{ sInk2 }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ artist }}</div>
+      </div>
+      <div style="position:absolute;left:222px;bottom:12px"><div style="display:flex;align-items:center;gap:6px">
+          <div onClick="{{ prevSong }}" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:{{ sInk2 }}" style-hover="background:rgba(255,255,255,0.08)" style-active="transform:scale(0.9)"><svg width="14" height="12" viewBox="0 0 14 12"><rect x="0" y="0" width="2" height="12" rx="1" fill="currentColor"></rect><polygon points="13,0 13,12 3,6" fill="currentColor"></polygon></svg></div>
+          <div onClick="{{ toggle }}" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:{{ sBtn }};color:{{ sBtnInk }}" style-active="transform:scale(0.92)">
+            <sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}"><svg width="13" height="15" viewBox="0 0 14 16"><rect x="1" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect><rect x="9" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect></svg></sc-if>
+            <sc-if value="{{ paused }}" hint-placeholder-val="{{ true }}"><svg width="13" height="15" viewBox="0 0 14 16" style="margin-left:2px"><polygon points="1,1 13,8 1,15" fill="currentColor"></polygon></svg></sc-if>
+          </div>
+          <div onClick="{{ nextSong }}" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:{{ sInk2 }}" style-hover="background:rgba(255,255,255,0.08)" style-active="transform:scale(0.9)"><svg width="14" height="12" viewBox="0 0 14 12"><polygon points="1,0 1,12 11,6" fill="currentColor"></polygon><rect x="12" y="0" width="2" height="12" rx="1" fill="currentColor"></rect></svg></div>
+        </div></div>
+    </div>
+
+    <div data-screen-label="Large widget" style="position:absolute;left:14px;top:262px;width:364px;height:382px;border-radius:26px;overflow:hidden;background:{{ sleeveBg }};transition:background 800ms ease;box-shadow:0 0 0 0.5px rgba(255,255,255,0.1) inset, 0 14px 40px rgba(0,0,0,0.45)">
+      <div style="position:absolute;left:112px;top:18px;width:172px;height:172px">
+        <div ref="{{ lgDiscRef }}" onClick="{{ toggle }}" style="position:absolute;inset:0;border-radius:50%;cursor:pointer;will-change:transform;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px);box-shadow:0 0 0 2px #0a0a0b inset, 6px 8px 18px rgba(0,0,0,0.5)">
+            <div style="position:absolute;inset:52px;border-radius:50%;background:oklch(0.86 0.045 80)"></div>
+            <div style="position:absolute;inset:55px;border-radius:50%;background:{{ art }}"></div>
+            <div style="position:absolute;left:83px;top:83px;width:6px;height:6px;border-radius:50%;background:#08080a;box-shadow:0 0 0 1px rgba(255,255,255,0.3)"></div>
+          </div>
+          <div style="position:absolute;inset:0;border-radius:50%;pointer-events:none;background:conic-gradient(transparent 0deg, rgba(255,255,255,0.12) 28deg, transparent 54deg, transparent 180deg, rgba(255,255,255,0.08) 206deg, transparent 232deg)"></div>
+      </div>
+      <div onClick="{{ onCover }}" title="Use your own cover" style="cursor:pointer;position:absolute;left:18px;top:18px;width:172px;height:172px;border-radius:7px;background:{{ art }};box-shadow:0 0 0 0.5px rgba(255,255,255,0.2) inset, 5px 0 12px rgba(0,0,0,0.45), 0 8px 20px rgba(0,0,0,0.4)">
+        <div style="position:absolute;inset:0;border-radius:7px;background:linear-gradient(115deg, rgba(255,255,255,0.18), transparent 40%, rgba(0,0,0,0.12))"></div>
+      </div>
+      <div style="position:absolute;left:322px;top:22px;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 38% 32%, #5a5a60, #26262a 70%);box-shadow:0 2px 6px rgba(0,0,0,0.5)"></div>
+      <div style="position:absolute;left:334px;top:34px;width:0px;height:0px;transform:rotate({{ armDegLg }}deg);transition:transform 700ms cubic-bezier(.34,1.22,.52,1)">
+        <div style="position:absolute;left:-1.5px;top:-8px;width:3px;height:144px;border-radius:2px;background:linear-gradient(90deg, #77777d, #f4f4f7 45%, #8a8a90);box-shadow:3px 4px 4px rgba(0,0,0,0.35)"></div>
+        <div style="position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #ececf0, #8a8a90 65%)"></div>
+        <div style="position:absolute;left:0px;top:132px;width:0px;height:0px;transform:rotate(22deg)"><div style="position:absolute;left:-4.5px;top:0px;width:9px;height:16px;border-radius:2px;background:#3a3a40;box-shadow:0 0 0 0.5px rgba(255,255,255,0.2) inset"></div></div>
+      </div>
+      <div ref="{{ petLgRef }}" style="position:absolute;left:312px;top:156px;width:32px;height:35px;transform-origin:50% 100%;will-change:transform"><div style="position:absolute;left:0px;top:0px;width:2px;height:2px;box-shadow:{{ petMed }}"></div></div>
+      <div style="position:absolute;left:20px;right:20px;top:206px;display:flex;align-items:flex-end;gap:12px">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+          <div style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ sAccent }}">{{ status }}</div>
+          <div style="font-size:18px;font-weight:700;letter-spacing:-0.01em;color:{{ sInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</div>
+          <div style="font-size:13px;color:{{ sInk2 }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ artist }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div onClick="{{ prevSong }}" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:{{ sInk2 }}" style-hover="background:rgba(255,255,255,0.08)" style-active="transform:scale(0.9)"><svg width="14" height="12" viewBox="0 0 14 12"><rect x="0" y="0" width="2" height="12" rx="1" fill="currentColor"></rect><polygon points="13,0 13,12 3,6" fill="currentColor"></polygon></svg></div>
+          <div onClick="{{ toggle }}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;background:{{ sBtn }};color:{{ sBtnInk }}" style-active="transform:scale(0.92)">
+            <sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}"><svg width="13" height="15" viewBox="0 0 14 16"><rect x="1" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect><rect x="9" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect></svg></sc-if>
+            <sc-if value="{{ paused }}" hint-placeholder-val="{{ true }}"><svg width="13" height="15" viewBox="0 0 14 16" style="margin-left:2px"><polygon points="1,1 13,8 1,15" fill="currentColor"></polygon></svg></sc-if>
+          </div>
+          <div onClick="{{ nextSong }}" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:{{ sInk2 }}" style-hover="background:rgba(255,255,255,0.08)" style-active="transform:scale(0.9)"><svg width="14" height="12" viewBox="0 0 14 12"><polygon points="1,0 1,12 11,6" fill="currentColor"></polygon><rect x="12" y="0" width="2" height="12" rx="1" fill="currentColor"></rect></svg></div>
+        </div>
+      </div>
+      <div onPointerDown="{{ scrubStart }}" style="position:absolute;left:20px;right:20px;top:276px;height:15px;display:flex;align-items:center;cursor:pointer;touch-action:none"><div ref="{{ progLgTrackRef }}" style="flex:1;height:3px;border-radius:2px;background:{{ sTrack }}"><div ref="{{ progLgRef }}" style="width:0%;height:100%;border-radius:2px;background:{{ sAccent }}"></div></div></div>
+      <div style="position:absolute;left:20px;right:20px;top:300px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:11px;font-weight:600;color:{{ sInk3 }}">Up next</div>
+        <div style="display:flex;gap:10px">
+          <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="3">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
+              <div style="position:relative;width:40px;height:40px;flex:none;border-radius:50%;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px)"><div style="position:absolute;inset:12px;border-radius:50%;background:{{ u.art }}"></div></div>
+              <div style="min-width:0;font-size:11px;font-weight:600;line-height:1.25;color:{{ sInk2 }};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ u.title }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,0.7)"></div>
+  </div>
+
+  <div data-screen-label="Lock screen Live Activity" style="position:relative;width:393px;height:852px;border-radius:56px;overflow:hidden;flex:none;background:radial-gradient(70% 45% at 30% 25%, oklch(0.45 0.09 260) 0%, transparent 70%), radial-gradient(70% 50% at 80% 80%, oklch(0.42 0.1 30) 0%, transparent 70%), #121016;box-shadow:0 0 0 10px #0c0c0e, 0 0 0 11px #2a2a2e, 0 40px 80px rgba(0,0,0,0.6)">
+    <div data-screen-label="Dynamic Island" style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:236px;height:37px;border-radius:20px;background:#000;display:flex;align-items:center;justify-content:space-between;padding:0 8px;box-sizing:border-box">
+      <div style="position:relative;width:24px;height:24px"><div ref="{{ diDiscRef }}" style="position:absolute;inset:0;border-radius:50%;will-change:transform;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px)"><div style="position:absolute;inset:8px;border-radius:50%;background:{{ art }}"></div><div style="position:absolute;left:10px;top:10px;width:4px;height:4px;border-radius:50%;background:#000"></div></div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:2px;height:14px">
+          <div ref="{{ eq1Ref }}" style="width:3px;height:6px;border-radius:2px;background:{{ sAccent }}"></div>
+          <div ref="{{ eq2Ref }}" style="width:3px;height:10px;border-radius:2px;background:{{ sAccent }}"></div>
+          <div ref="{{ eq3Ref }}" style="width:3px;height:7px;border-radius:2px;background:{{ sAccent }}"></div>
+        </div>
+        <div ref="{{ diPetRef }}" style="position:relative;width:16px;height:16px;transform-origin:50% 100%"><div style="position:absolute;left:0px;top:0px;width:1px;height:1px;box-shadow:{{ petTiny }}"></div></div>
+      </div>
+    </div>
+    <div style="position:absolute;left:0;right:0;top:92px;text-align:center;color:rgba(255,255,255,0.85);font-size:19px;font-weight:600">Monday, October 5</div>
+    <div style="position:absolute;left:0;right:0;top:112px;text-align:center;color:rgba(255,255,255,0.92);font-size:96px;font-weight:700;letter-spacing:-0.02em;line-height:1.1">9:41</div>
+
+    <div data-screen-label="Live Activity" style="position:absolute;left:14px;right:14px;bottom:110px;height:168px;border-radius:24px;background:{{ laBg }};backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:0 0 0 0.5px rgba(255,255,255,0.12) inset;transition:background 800ms ease">
+      <div style="position:absolute;left:16px;top:16px;width:84px;height:84px;border-radius:50%;box-shadow:4px 6px 14px rgba(0,0,0,0.45)"><div ref="{{ laDiscRef }}" style="position:absolute;inset:0;border-radius:50%;will-change:transform;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px)"><div style="position:absolute;inset:27px;border-radius:50%;background:{{ art }}"></div><div style="position:absolute;left:40px;top:40px;width:4px;height:4px;border-radius:50%;background:#000"></div></div><div style="position:absolute;inset:0;border-radius:50%;pointer-events:none;background:conic-gradient(transparent 0deg, rgba(255,255,255,0.12) 28deg, transparent 54deg, transparent 180deg, rgba(255,255,255,0.08) 206deg, transparent 232deg)"></div></div>
+      <div style="position:absolute;left:94px;top:12px;width:0px;height:0px;transform:rotate({{ armDegLa }}deg);transition:transform 700ms cubic-bezier(.34,1.22,.52,1)">
+        <div style="position:absolute;left:-1px;top:-3px;width:2px;height:52px;border-radius:1px;background:linear-gradient(90deg, #888, #f4f4f7, #999)"></div>
+        <div style="position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#bbb"></div>
+        <div style="position:absolute;left:-3px;top:46px;width:6px;height:9px;border-radius:2px;background:#3a3a40;transform:rotate(22deg)"></div>
+      </div>
+      <div style="position:absolute;left:116px;right:58px;top:20px;display:flex;flex-direction:column;gap:3px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:{{ sAccent }}">{{ status }}</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ artist }}</div>
+      </div>
+      <div ref="{{ laPetRef }}" style="position:absolute;right:16px;top:20px;width:32px;height:35px;transform-origin:50% 100%;will-change:transform"><div style="position:absolute;left:0px;top:0px;width:2px;height:2px;box-shadow:{{ petMed }}"></div></div>
+      <div style="position:absolute;left:16px;right:16px;top:114px;height:3px;border-radius:2px;background:rgba(255,255,255,0.15)"><div ref="{{ progLaRef }}" style="width:0%;height:100%;border-radius:2px;background:{{ sAccent }}"></div></div>
+      <div style="position:absolute;left:0;right:0;bottom:8px;display:flex;justify-content:center;align-items:center;gap:28px;color:#fff">
+        <div onClick="{{ prevSong }}" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(0.9)"><svg width="16" height="14" viewBox="0 0 14 12"><rect x="0" y="0" width="2" height="12" rx="1" fill="currentColor"></rect><polygon points="13,0 13,12 3,6" fill="currentColor"></polygon></svg></div>
+        <div onClick="{{ toggle }}" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(0.9)">
+          <sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="18" viewBox="0 0 14 16"><rect x="1" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect><rect x="9" y="1" width="4" height="14" rx="1.2" fill="currentColor"></rect></svg></sc-if>
+          <sc-if value="{{ paused }}" hint-placeholder-val="{{ true }}"><svg width="16" height="18" viewBox="0 0 14 16"><polygon points="1,1 13,8 1,15" fill="currentColor"></polygon></svg></sc-if>
+        </div>
+        <div onClick="{{ nextSong }}" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer" style-active="transform:scale(0.9)"><svg width="16" height="14" viewBox="0 0 14 12"><polygon points="1,0 1,12 11,6" fill="currentColor"></polygon><rect x="12" y="0" width="2" height="12" rx="1" fill="currentColor"></rect></svg></div>
+      </div>
+    </div>
+    <div style="position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,0.7)"></div>
+  </div>
+
+  <div style="max-width:340px;display:flex;flex-direction:column;gap:14px;color:rgba(255,255,255,0.8);font-size:14px;line-height:1.5;text-wrap:pretty">
+    <div style="font-size:20px;font-weight:600;color:#fff">iPhone widgets</div>
+    <div>The app (middle) runs the full turntable: spinning record, pet walking to the arm, record swaps and the crate. Tap “Continue with Spotify” to walk through sign-in. On the home screen, tap play, the record, or skip on the medium widget: the arm drops, the record spins, the pet dances, and skipping slides the record out and a new one in.</div>
+    <div>New: tap the large widget’s sleeve to use your own album art. The widget colours, progress bar and Live Activity pick up the cover’s colour, and the cover is shared with the Mac widget. Drag the large widget’s progress bar to scrub. Theme and sound are in Tweaks.</div>
+    <div style="color:rgba(255,255,255,0.55)">iOS home-screen widgets render as snapshots, so the record can’t spin continuously and the pet can’t walk. State changes (arm down, pet pose, new cover) animate as transitions between snapshots. Full motion would live in the app or a Live Activity.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Dark&quot;,&quot;Light&quot;],&quot;default&quot;:&quot;Dark&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sound&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const PAL = { k: '#3a2a22', o: '#f0a860', l: '#ffe3bf', p: '#f59a9a', w: '#fff' };
+const CAT = ['..kk........kk..','..kpk......kpk..','..kppkkkkkkppk..','.kooooooooooook.','.kooooooooooook.','.kowkoooowkoook.','.kokkoooookkook.','.kokkoooookkook.','.kppoookkoooppk.','..kooooooooook..','..kkoollllookk..','.kokollllllokok.','..koolllllloook.','..kooooooooook..','..koook..koook..','..kkkkk..kkkkk..'];
+function sprite(happy, s = 2) {
+  const g = CAT.map(r => r.split(''));
+  if (happy) { for (const c of [3, 9]) { for (let r = 5; r <= 7; r++) { g[r][c] = 'o'; g[r][c + 1] = 'o'; } g[6][c] = 'k'; g[6][c + 1] = 'k'; g[7][c - 1 < 2 ? c : c - 1] = 'k'; } g[11][1] = '.'; g[9][0] = 'k'; g[10][1] = 'o'; g[11][14] = '.'; g[9][15] = 'k'; g[10][14] = 'o'; }
+  const out = [];
+  g.forEach((row, y) => row.forEach((ch, x) => { const c = PAL[ch]; if (c) out.push((x * s) + 'px ' + (y * s) + 'px 0 0 ' + c); }));
+  return out.join(',');
+}
+const TRACKS = [
+  { title: 'Blinding Lights', artist: 'The Weeknd', dur: 200, bpm: 86, tint: '#5a78c8', art: 'radial-gradient(circle at 34% 34%, oklch(0.82 0.13 70) 0 20%, transparent 21%), linear-gradient(160deg, oklch(0.5 0.12 250), oklch(0.26 0.08 265))' },
+  { title: 'Dreams', artist: 'Fleetwood Mac', dur: 257, bpm: 120, tint: '#d9784a', art: 'radial-gradient(circle at 70% 62%, oklch(0.22 0.04 30) 0 18%, transparent 19%), repeating-linear-gradient(90deg, oklch(0.72 0.14 35) 0 7px, oklch(0.62 0.15 28) 7px 14px)' },
+  { title: 'Get Lucky', artist: 'Daft Punk', dur: 248, bpm: 116, tint: '#3fa58a', art: 'radial-gradient(circle at 50% 118%, oklch(0.7 0.14 165) 0 46%, transparent 47%), radial-gradient(circle at 72% 26%, oklch(0.95 0.03 100) 0 6%, transparent 7%), oklch(0.22 0.05 220)' },
+  { title: 'Redbone', artist: 'Childish Gambino', dur: 327, bpm: 80, tint: '#e0a24a', art: 'linear-gradient(180deg, oklch(0.86 0.1 88) 0 48%, oklch(0.62 0.16 25) 48% 100%)' },
+];
+class Component extends DCLogic {
+  state = { playing: false, armDown: false, motor: false, idx: 0, screen: 'connect', connecting: false, busy: false };
+  medDiscRef = React.createRef(); medShadowRef = React.createRef(); smDiscRef = React.createRef(); petMedRef = React.createRef(); petSmRef = React.createRef(); progRef = React.createRef(); sleeveDiscRef = React.createRef(); lgDiscRef = React.createRef(); petLgRef = React.createRef(); progLgRef = React.createRef(); progLgTrackRef = React.createRef(); laDiscRef = React.createRef(); diDiscRef = React.createRef(); laPetRef = React.createRef(); diPetRef = React.createRef(); progLaRef = React.createRef(); eq1Ref = React.createRef(); eq2Ref = React.createRef(); eq3Ref = React.createRef();
+  angle = 0; vel = 0; t = 0; beat = 0; amp = 0; swapX = 0; hop = 0; timers = [];
+  componentDidMount() { const VS = window.VinylShared; if (VS) this.unsub = VS.subscribe(() => this.forceUpdate()); this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; this.last = performance.now(); this.raf = requestAnimationFrame(this.tick); }
+  componentWillUnmount() { this.unsub && this.unsub(); cancelAnimationFrame(this.raf); this.timers.forEach(clearTimeout); }
+  later(f, ms) { this.timers.push(setTimeout(f, ms)); }
+  tick = (now) => {
+    const dt = Math.min(64, now - this.last); this.last = now;
+    const full = 33.3 * 360 / 60000 * (this.reduced ? 0.12 : 1), target = this.state.motor ? full : 0;
+    this.vel += (target - this.vel) * (1 - Math.exp(-dt / (target > this.vel ? 420 : 380)));
+    if (!this.state.motor && this.vel < 1e-5) this.vel = 0;
+    this.angle = (this.angle + this.vel * dt) % 360;
+    if (this.state.motor) this.t = Math.min(TRACKS[this.state.idx].dur, this.t + dt / 1000);
+    const tf = 'translateX(' + this.swapX.toFixed(1) + 'px) rotate(';
+    if (this.medDiscRef.current) this.medDiscRef.current.style.transform = tf + (this.angle + this.swapX * 1.4).toFixed(2) + 'deg)';
+    if (this.medShadowRef.current) this.medShadowRef.current.style.transform = 'translate(' + this.swapX.toFixed(1) + 'px, 4px)';
+    if (this.smDiscRef.current) this.smDiscRef.current.style.transform = tf + this.angle.toFixed(2) + 'deg)';
+    const ret = Math.min(1, Math.abs(this.swapX) / 190), rr = ret * ret * (3 - 2 * ret);
+    if (this.sleeveDiscRef.current) this.sleeveDiscRef.current.style.transform = 'translateX(' + (-rr * 62).toFixed(1) + 'px) rotate(' + this.angle.toFixed(2) + 'deg)';
+    if (this.lgDiscRef.current) this.lgDiscRef.current.style.transform = 'translateX(' + (-rr * 94).toFixed(1) + 'px) rotate(' + this.angle.toFixed(2) + 'deg)';
+    const VS = window.VinylShared, snd = this.props.sound ?? true;
+    if (VS) { VS.setSound(snd); const want = this.state.motor && snd; if (want !== this.crk) { this.crk = want; VS.crackle(want); } if (this.state.armDown !== this.wasDown) { if (this.state.armDown && this.wasDown !== undefined && snd) VS.needleDrop(); this.wasDown = this.state.armDown; } }
+    [this.laDiscRef, this.diDiscRef].forEach(r => r.current && (r.current.style.transform = 'translateX(' + (-rr * 30).toFixed(1) + 'px) rotate(' + this.angle.toFixed(2) + 'deg)'));
+    const pc = (this.t / TRACKS[this.state.idx].dur * 100).toFixed(2) + '%'; if (this.progLaRef.current) this.progLaRef.current.style.width = pc;
+    [this.eq1Ref, this.eq2Ref, this.eq3Ref].forEach((r, k) => r.current && (r.current.style.height = (4 + (this.vel > 0.001 ? Math.abs(Math.sin(now / (140 + k * 37) + k)) * 10 : 0)).toFixed(1) + 'px'));
+    if (this.progLgRef.current) this.progLgRef.current.style.width = (this.t / TRACKS[this.state.idx].dur * 100).toFixed(2) + '%';
+    if (this.progRef.current) this.progRef.current.style.width = (this.t / TRACKS[this.state.idx].dur * 100).toFixed(2) + '%';
+    this.amp += ((this.state.playing ? (this.reduced ? 0.15 : 1) : 0) - this.amp) * (1 - Math.exp(-dt / 220));
+    this.beat += dt / 1000 * TRACKS[this.state.idx].bpm / 60 * (this.amp > 0.01 ? 1 : 0);
+    this.hop = Math.max(0, this.hop - dt / 420);
+    const a = this.amp, b = this.beat, PI = Math.PI;
+    const tempo = Math.min(1, Math.max(0, (TRACKS[this.state.idx].bpm - 84) / 30));
+    const y = -(Math.pow(Math.abs(Math.sin(b * PI)), 1.4) * (1.4 + 3.4 * tempo) * a + Math.sin(this.hop * PI) * 8);
+    const sway = Math.sin(b * PI / 2) * (2.6 - 1.4 * tempo) * a, rot = Math.sin(b * PI / 2 + 0.4) * 4 * a;
+    const sq = 1 - Math.pow(1 - Math.abs(Math.sin(b * PI)), 6) * a * 0.05 + Math.sin(now / 1600 * PI) * (1 - a) * 0.015;
+    const pt = 'translate(' + sway.toFixed(2) + 'px, ' + y.toFixed(2) + 'px) rotate(' + rot.toFixed(2) + 'deg) scaleY(' + sq.toFixed(3) + ')';
+    if (this.petMedRef.current) this.petMedRef.current.style.transform = pt;
+    if (this.petSmRef.current) this.petSmRef.current.style.transform = pt;
+    if (this.petLgRef.current) this.petLgRef.current.style.transform = pt;
+    if (this.laPetRef.current) this.laPetRef.current.style.transform = pt;
+    if (this.diPetRef.current) this.diPetRef.current.style.transform = 'translateY(' + (y * 0.5).toFixed(2) + 'px)';
+    this.raf = requestAnimationFrame(this.tick);
+  };
+  play() { this.hop = 1; this.setState({ playing: true, armDown: true }); this.later(() => this.setState({ motor: true }), 650); }
+  pause() { this.hop = 0.6; this.setState({ playing: false, motor: false }); this.later(() => this.setState({ armDown: false }), 450); }
+  toggle = () => { if (this.state.busy) return; this.state.playing ? this.pause() : this.play(); };
+  swap(dir) {
+    if (this.state.busy) return;
+    const was = this.state.playing; this.setState({ busy: true, motor: false, armDown: false }); this.hop = 1;
+    const anim = (from, to, ms, done) => { const t0 = performance.now(); const f = (n) => { const k = Math.min(1, (n - t0) / ms), e = from < to ? k * k : 1 - Math.pow(1 - k, 3); this.swapX = from + (to - from) * (from < to ? e : e); if (k < 1) requestAnimationFrame(f); else done && done(); }; requestAnimationFrame(f); };
+    this.later(() => anim(0, -dir * 190, 420, () => {
+      this.t = 0; this.setState({ idx: (this.state.idx + dir + TRACKS.length) % TRACKS.length });
+      anim(dir * 190, 0, 520, () => { this.setState({ busy: false }); if (was) { this.setState({ armDown: true }); this.later(() => this.setState({ motor: true }), 650); } });
+    }), was ? 520 : 0);
+  };
+  scrubStart = (e) => {
+    const el = this.progLgTrackRef.current; if (!el) return;
+    const set = (x) => { const r = el.getBoundingClientRect(); this.t = Math.min(1, Math.max(0, (x - r.left) / r.width)) * TRACKS[this.state.idx].dur; };
+    set(e.clientX); const mv = (ev) => set(ev.clientX), up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  };
+  renderVals() {
+    const p = this.state.playing, tr = TRACKS[this.state.idx], VS = window.VinylShared, light = this.props.theme === 'Light';
+    const tint = VS ? VS.tint(this.state.idx, tr.tint, tr) : tr.tint, art = VS ? VS.cover(this.state.idx, tr.art, tr) : tr.art;
+    return {
+      medDiscRef: this.medDiscRef, medShadowRef: this.medShadowRef, smDiscRef: this.smDiscRef, petMedRef: this.petMedRef, petSmRef: this.petSmRef, progRef: this.progRef, sleeveDiscRef: this.sleeveDiscRef, lgDiscRef: this.lgDiscRef, petLgRef: this.petLgRef, progLgRef: this.progLgRef,
+      armDegLg: this.state.armDown ? 30 : 8, upNext: [1, 2, 3].map(k => { const j = (this.state.idx + k) % TRACKS.length; return { title: TRACKS[j].title, art: VS ? VS.cover(j, TRACKS[j].art, TRACKS[j]) : TRACKS[j].art }; }),
+      playing: p, paused: !p, toggle: this.toggle, prevSong: () => this.swap(-1), nextSong: () => this.swap(1),
+      status: (p ? 'Now spinning' : 'Paused') + ' · Side ' + (this.state.idx < 2 ? 'A' : 'B'), title: tr.title, artist: tr.artist, art,
+      sleeveBg: light ? 'linear-gradient(160deg, color-mix(in oklch, ' + tint + ' 22%, #f7f4ef), #ebe6df)' : 'linear-gradient(160deg, color-mix(in oklch, ' + tint + ' 30%, #1f1c1a), #161412)',
+      sInk: light ? '#1d1a17' : '#fff', sInk2: light ? 'rgba(29,26,23,0.62)' : 'rgba(255,255,255,0.6)', sInk3: light ? 'rgba(29,26,23,0.5)' : 'rgba(255,255,255,0.45)',
+      sAccent: 'color-mix(in oklch, ' + tint + ' 70%, ' + (light ? '#000' : '#fff') + ')', sBtn: light ? '#1d1a17' : 'oklch(0.93 0.03 80)', sBtnInk: light ? '#f6f4f0' : '#1b1816', sTrack: light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)',
+      laBg: 'linear-gradient(160deg, color-mix(in oklch, ' + tint + ' 28%, rgba(20,18,18,0.72)), rgba(16,14,14,0.72))',
+      progLgTrackRef: this.progLgTrackRef, scrubStart: this.scrubStart, laDiscRef: this.laDiscRef, diDiscRef: this.diDiscRef, laPetRef: this.laPetRef, diPetRef: this.diPetRef, progLaRef: this.progLaRef, eq1Ref: this.eq1Ref, eq2Ref: this.eq2Ref, eq3Ref: this.eq3Ref,
+      onCover: () => VS && VS.pickCover(this.state.idx), armDegLa: this.state.armDown ? 24 : 4, petTiny: sprite(p, 1),
+      armDeg: this.state.armDown ? 22 : 6, armDegSm: this.state.armDown ? 22 : 6,
+      petMed: sprite(p), petBig: sprite(false, 3),
+      showConnect: this.state.screen !== 'player', showAuth: this.state.screen === 'auth', showPlayer: this.state.screen === 'player',
+      startAuth: () => this.setState({ screen: 'auth' }), cancelAuth: () => this.setState({ screen: 'connect', connecting: false }),
+      agreeLabel: this.state.connecting ? 'Connecting…' : 'Agree and connect',
+      agree: () => { if (this.state.connecting) return; this.setState({ connecting: true }); setTimeout(() => this.setState({ screen: 'player', connecting: false }), 1100); },
+      disconnect: () => this.setState({ screen: 'connect' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

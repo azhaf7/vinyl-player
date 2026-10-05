@@ -1,0 +1,164 @@
+import AppKit
+import SwiftUI
+import QuartzCore
+
+/// Borderless, transparent window pinned to the desktop (behind normal windows), or floating when the
+/// user prefers. This is the full-animation "widget".
+final class DesktopPanel: NSPanel {
+    convenience init(contentRect: NSRect) {
+        self.init(contentRect: contentRect, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        isOpaque = false
+        backgroundColor = .clear
+        hasShadow = false // drawn in SwiftUI
+        isMovableByWindowBackground = false
+        collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+        hidesOnDeactivate = false
+        isReleasedWhenClosed = false
+    }
+
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+
+    func applyLevel(floating: Bool) {
+        level = floating ? .floating : NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopIconWindow)) + 1)
+    }
+}
+
+final class DesktopPanelController: NSObject, NSWindowDelegate {
+    private let model: PlayerModel
+    private var panel: DesktopPanel?
+    private let driver: FrameDriver
+
+    /// Room around the 344-wide column for the card's shadow; height leaves space for the panels below.
+    static let margin: CGFloat = 40
+    static let size = NSSize(width: 344 + 2 * margin, height: margin + 58 + 384 + 12 + 230 + margin)
+
+    init(model: PlayerModel) {
+        self.model = model
+        driver = FrameDriver { [weak model] dt in model?.tick(dt) }
+        super.init()
+    }
+
+    var isVisible: Bool { panel?.isVisible ?? false }
+
+    func show() {
+        if panel == nil { build() }
+        panel?.orderFrontRegardless()
+        driver.setFast(true)
+    }
+
+    func hide() {
+        panel?.orderOut(nil)
+        driver.setFast(false)
+    }
+
+    func toggle() { isVisible ? hide() : show() }
+
+    func resetPosition() {
+        guard let panel, let screen = NSScreen.main else { return }
+        let f = screen.visibleFrame
+        panel.setFrameOrigin(NSPoint(x: f.maxX - Self.size.width - 24, y: f.maxY - Self.size.height - 8))
+    }
+
+    func applyLevel() { panel?.applyLevel(floating: Preferences.shared.floatAboveWindows) }
+
+    private func build() {
+        let p = DesktopPanel(contentRect: NSRect(origin: .zero, size: Self.size))
+        let root = PlayerRoot(model: model)
+            .padding(Self.margin)
+            .frame(width: Self.size.width, height: Self.size.height, alignment: .top)
+        let host = NSHostingView(rootView: root)
+        host.frame = NSRect(origin: .zero, size: Self.size)
+        p.contentView = host
+        p.delegate = self
+        p.applyLevel(floating: Preferences.shared.floatAboveWindows)
+        panel = p
+        if let saved = UserDefaults.standard.string(forKey: "panelOrigin") {
+            p.setFrameOrigin(NSPointFromString(saved))
+        } else {
+            resetPosition()
+        }
+        driver.attach(to: host)
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        guard let p = panel else { return }
+        UserDefaults.standard.set(NSStringFromPoint(p.frame.origin), forKey: "panelOrigin")
+    }
+
+    /// Full frame rate only while someone can see it; otherwise a slow tick keeps playback time moving.
+    func windowDidChangeOcclusionState(_ notification: Notification) {
+        guard let p = panel else { return }
+        driver.setFast(p.occlusionState.contains(.visible))
+    }
+}
+
+/// One clock for all motion: the display's refresh when visible, a 4 Hz timer when hidden.
+final class FrameDriver: NSObject {
+    private let onTick: (Double) -> Void
+    private var link: CADisplayLink?
+    private var slow: Timer?
+    private var last = CACurrentMediaTime()
+
+    init(onTick: @escaping (Double) -> Void) {
+        self.onTick = onTick
+        super.init()
+        setFast(false)
+    }
+
+    func attach(to view: NSView) {
+        link?.invalidate()
+        let l = view.displayLink(target: self, selector: #selector(frame(_:)))
+        l.add(to: .main, forMode: .common)
+        link = l
+        setFast(true)
+    }
+
+    func setFast(_ fast: Bool) {
+        if let link {
+            link.isPaused = !fast
+        }
+        let wantSlow = !fast || link == nil
+        if wantSlow, slow == nil {
+            let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in self?.step() }
+            RunLoop.main.add(t, forMode: .common)
+            slow = t
+        } else if !wantSlow {
+            slow?.invalidate(); slow = nil
+        }
+        last = CACurrentMediaTime()
+    }
+
+    @objc private func frame(_ l: CADisplayLink) { step() }
+
+    private func step() {
+        let now = CACurrentMediaTime()
+        let dt = (now - last) * 1000
+        last = now
+        if dt > 0 { onTick(dt) }
+    }
+}
+
+/// `NSVisualEffectView` (.hudWindow) behind the glass.
+struct VisualEffectBlur: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let v = NSVisualEffectView()
+        v.material = .hudWindow
+        v.blendingMode = .behindWindow
+        v.state = .active
+        return v
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+}
+
+/// Drag the window by the card's background.
+struct WindowDragArea: NSViewRepresentable {
+    final class DragView: NSView {
+        override func mouseDown(with event: NSEvent) { window?.performDrag(with: event) }
+        override var mouseDownCanMoveWindow: Bool { true }
+    }
+
+    func makeNSView(context: Context) -> NSView { DragView() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}

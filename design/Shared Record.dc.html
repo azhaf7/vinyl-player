@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="vinyl-shared.js"></script>
+<style>
+html,body{margin:0;min-height:100%;background:#121013;-webkit-font-smoothing:antialiased}
+a{color:oklch(0.85 0.08 70)}a:hover{color:oklch(0.92 0.06 70)}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;padding:48px 20px;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;background:{{ pageBg }};transition:background 900ms ease">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+    <div style="font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.55)">{{ fromLine }}</div>
+    <div style="font-size:26px;font-weight:700;letter-spacing:-0.02em;color:#fff;text-wrap:balance">{{ headline }}</div>
+  </div>
+
+  <div data-screen-label="Record" onClick="{{ open }}" style="position:relative;width:min(560px, 92vw);aspect-ratio:560 / 320;cursor:pointer">
+    <div ref="{{ recWrapRef }}" style="position:absolute;top:2%;left:2%;width:54%;aspect-ratio:1;transition:transform 1100ms cubic-bezier(.22,1,.36,1)">
+      <div ref="{{ recRef }}" style="position:absolute;inset:0;border-radius:50%;will-change:transform;background:repeating-conic-gradient(from 10deg, rgba(255,255,255,0.06) 0deg 45deg, rgba(0,0,0,0) 45deg 90deg), repeating-radial-gradient(circle at center, #101012 0px, #101012 1.1px, #1c1c20 1.5px, #101012 2.3px);box-shadow:0 0 0 3px #0a0a0b inset, 10px 18px 40px rgba(0,0,0,0.55)">
+        <div style="position:absolute;inset:31%;border-radius:50%;background:oklch(0.88 0.04 80)"></div>
+        <div style="position:absolute;inset:32.5%;border-radius:50%;background:{{ art }};box-shadow:0 0 0 1px rgba(0,0,0,0.5)"></div>
+        <div style="position:absolute;left:48.5%;top:48.5%;width:3%;height:3%;border-radius:50%;background:#000"></div>
+      </div>
+      <div style="position:absolute;inset:0;border-radius:50%;pointer-events:none;background:conic-gradient(transparent 0deg, rgba(255,255,255,0.12) 28deg, transparent 54deg, transparent 180deg, rgba(255,255,255,0.08) 206deg, transparent 232deg)"></div>
+    </div>
+    <div style="position:absolute;top:0;left:0;width:57%;aspect-ratio:1;border-radius:8px;background:{{ art }};box-shadow:0 0 0 0.5px rgba(255,255,255,0.2) inset, 8px 0 18px rgba(0,0,0,0.45), 0 20px 50px rgba(0,0,0,0.5)">
+      <div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(115deg, rgba(255,255,255,0.2), transparent 40%, rgba(0,0,0,0.14))"></div>
+      <sc-if value="{{ sealed }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;right:-14px;top:18px;padding:8px 14px;border-radius:999px;background:oklch(0.86 0.12 80);color:#241c16;font-size:13px;font-weight:700;box-shadow:0 6px 16px rgba(0,0,0,0.35);transform:rotate(6deg)">Tap to open</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ opened }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;max-width:420px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:30px;font-weight:700;letter-spacing:-0.02em;color:#fff">{{ title }}</div>
+        <div style="font-size:17px;color:rgba(255,255,255,0.65)">{{ artistLine }}</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+        <a href="{{ spotifyUrl }}" target="_blank" rel="noopener" style="display:flex;align-items:center;height:46px;padding:0 22px;border-radius:23px;background:#1ed760;color:#000;font-size:15px;font-weight:700;text-decoration:none">Open in Spotify</a>
+        <a href="{{ appleUrl }}" target="_blank" rel="noopener" style="display:flex;align-items:center;height:46px;padding:0 22px;border-radius:23px;background:rgba(255,255,255,0.12);color:#fff;font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 0 0 0.5px rgba(255,255,255,0.2) inset">Apple Music</a>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { opened: false };
+  recRef = React.createRef(); recWrapRef = React.createRef(); angle = 0; vel = 0;
+  params() {
+    const q = new URLSearchParams(location.hash.slice(1)), q2 = new URLSearchParams(location.search);
+    const g = (k) => q.get(k) || q2.get(k);
+    return { title: g('song') || 'Get Lucky', artist: g('by') || 'Daft Punk', from: g('from') || 'A friend', pet: g('pet') || '' };
+  }
+  componentDidMount() {
+    const VS = window.VinylShared; if (VS) this.unsub = VS.subscribe(() => this.forceUpdate());
+    setTimeout(() => this.forceUpdate(), 300);
+    this.last = performance.now();
+    const tick = (now) => {
+      const dt = Math.min(64, now - this.last); this.last = now;
+      const target = this.state.opened ? 33.3 * 360 / 60000 : 0;
+      this.vel += (target - this.vel) * (1 - Math.exp(-dt / 600));
+      this.angle = (this.angle + this.vel * dt) % 360;
+      if (this.recRef.current) this.recRef.current.style.transform = 'rotate(' + this.angle.toFixed(2) + 'deg)';
+      this.raf = requestAnimationFrame(tick);
+    };
+    this.raf = requestAnimationFrame(tick);
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); this.unsub && this.unsub(); }
+  open = () => {
+    if (this.state.opened) return;
+    this.setState({ opened: true });
+    if (this.recWrapRef.current) this.recWrapRef.current.style.transform = 'translateX(76%)';
+    const VS = window.VinylShared; VS && VS.needleDrop && VS.needleDrop();
+  };
+  renderVals() {
+    const p = this.params(), VS = window.VinylShared, t = { title: p.title, artist: p.artist };
+    const fallback = 'linear-gradient(160deg, oklch(0.6 0.1 60), oklch(0.3 0.06 40))';
+    const art = VS ? VS.cover(-1, fallback, t) : fallback;
+    const tint = VS ? VS.tint(-1, '#8a6a4a', t) : '#8a6a4a';
+    const q = encodeURIComponent(p.title + ' ' + p.artist);
+    return {
+      recRef: this.recRef, recWrapRef: this.recWrapRef, open: this.open,
+      art, sealed: !this.state.opened, opened: this.state.opened,
+      fromLine: p.from + (p.pet ? ' & ' + p.pet : '') + ' sent you a record',
+      headline: this.state.opened ? 'Now spinning' : 'Something to listen to',
+      title: p.title, artistLine: p.artist,
+      spotifyUrl: 'https://open.spotify.com/search/' + q, appleUrl: 'https://music.apple.com/search?term=' + q,
+      pageBg: 'radial-gradient(70% 60% at 50% 30%, color-mix(in oklch, ' + tint + ' 45%, #121013) 0%, #121013 75%)',
+    };
+  }
+}
+</script>
+</body>
+</html>
