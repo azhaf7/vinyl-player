@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 enum LibrarySection: String, CaseIterable, Identifiable {
-    case inbox = "Inbox", history = "History", friends = "Friends", account = "Account"
+    case inbox = "Inbox", history = "History", friends = "Friends", account = "Account", settings = "Settings"
     var id: String { rawValue }
     var symbol: String {
         switch self {
@@ -10,6 +10,7 @@ enum LibrarySection: String, CaseIterable, Identifiable {
         case .history: return "clock.arrow.circlepath"
         case .friends: return "person.2"
         case .account: return "person.crop.circle"
+        case .settings: return "gearshape"
         }
     }
 }
@@ -71,6 +72,7 @@ struct LibraryView: View {
                 case .history: HistoryView(model: model)
                 case .friends: FriendsView(model: model)
                 case .account: AccountView(model: model)
+                case .settings: SettingsForm(model: model).frame(maxWidth: 620)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -553,7 +555,8 @@ private struct WelcomeView: View {
                         .onTapGesture { prefs.displayMode = m }
                     }
                 }
-                Text("You can change this anytime from the menu bar.").font(.callout).foregroundStyle(.secondary)
+                Text("Change this anytime in Settings: right-click the turntable, click ⚙ in the notch, or open Vinyl Player again from Applications.")
+                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 480)
                 Button("Start listening") { finish() }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)

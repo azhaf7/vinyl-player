@@ -158,7 +158,7 @@ private struct MenuContent: View {
             ForEach(ThemeChoice.allCases) { Text($0.rawValue).tag($0) }
         }
         Divider()
-        SettingsLink { Text("Settings…") }
+        Button("Settings…") { LibraryWindowController.shared.show(.settings) }
             .keyboardShortcut(",")
         Button("Quit Vinyl Player") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
@@ -167,52 +167,10 @@ private struct MenuContent: View {
 
 private struct SettingsView: View {
     @ObservedObject var app: AppDelegate
-    @ObservedObject var prefs = Preferences.shared
 
     var body: some View {
-        Form {
-            Section("Player") {
-                Picker("Show as", selection: $prefs.displayMode) {
-                    ForEach(DisplayMode.allCases) { Text($0.rawValue).tag($0) }
-                }
-                Text(prefs.displayMode.blurb).font(.caption).foregroundStyle(.secondary)
-                Toggle("Open at login", isOn: Binding(get: { prefs.launchAtLogin }, set: { prefs.launchAtLogin = $0 }))
-                if prefs.displayMode == .desktop || prefs.displayMode == .both {
-                    Toggle("Float above other windows", isOn: $prefs.floatAboveWindows)
-                }
-                Toggle("Pet operates the tonearm", isOn: $prefs.petOperatesArm)
-                Toggle("Tonearm follows the groove", isOn: $prefs.armFollowsGroove)
-                Toggle("Needle drop and crackle", isOn: $prefs.sound)
-                Picker("Turntable", selection: $prefs.drive) {
-                    ForEach(DriveChoice.allCases) { Text($0.rawValue).tag($0) }
-                }
-                Picker("Appearance", selection: $prefs.theme) {
-                    ForEach(ThemeChoice.allCases) { Text($0.rawValue).tag($0) }
-                }
-            }
-            Section("Music") {
-                Picker("Follow", selection: $prefs.musicSource) {
-                    ForEach(MusicSource.allCases) { Text($0.rawValue).tag($0) }
-                }
-                TimelineView(.periodic(from: .now, by: 2)) { _ in
-                    Text(app.model.service.status)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Text("Shows what the Spotify or Music app on this Mac is playing, and controls it. The first time, macOS asks to let Vinyl Player control the app; choose OK.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Section("Sharing links") {
-                TextField("Your name", text: $prefs.senderName, prompt: Text("A friend"))
-                TextField("Shared record page", text: $prefs.shareBaseURL)
-                Text("For people without the app. Host the web folder (e.g. on Vercel) and paste its shared-record address here. Friends with the app can also get records straight to their inbox: open the Library.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .formStyle(.grouped)
-        .frame(width: 480)
-        .onAppear { NSApp.activate(ignoringOtherApps: true) }
+        SettingsForm(model: app.model)
+            .frame(width: 500, height: 640)
+            .onAppear { NSApp.activate(ignoringOtherApps: true) }
     }
 }

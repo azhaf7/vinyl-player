@@ -106,6 +106,18 @@ private struct PlayerCard: View {
                 .allowsHitTesting(false)
         }
         .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .contextMenu {
+            Button(model.pendingPlaying ? "Pause" : "Play") { model.toggle() }
+            Button("Next Song") { model.next() }
+            Divider()
+            Button("Library…") { LibraryWindowController.shared.show() }
+            Button("Settings…") { LibraryWindowController.shared.show(.settings) }
+            Menu("Show As") {
+                ForEach(DisplayMode.allCases) { m in
+                    Button(m.rawValue) { Preferences.shared.displayMode = m }
+                }
+            }
+        }
     }
 }
 
@@ -410,14 +422,24 @@ private struct CratePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 4) {
-                tab(model.isLive ? "Recent" : "Up next", .queue)
-                tab("Records", .records)
-                tab("Pets", .pets)
-                tab("Style", .style)
+            HStack {
+                HStack(spacing: 4) {
+                    tab(model.isLive ? "Recent" : "Up next", .queue)
+                    tab("Records", .records)
+                    tab("Pets", .pets)
+                    tab("Style", .style)
+                }
+                .padding(2)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.25)))
+                Spacer()
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 13))
+                    .foregroundStyle(ink.ink2)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+                    .onTapGesture { LibraryWindowController.shared.show(.settings) }
+                    .help("All settings")
             }
-            .padding(2)
-            .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.25)))
 
             switch model.drawer {
             case .records?: records

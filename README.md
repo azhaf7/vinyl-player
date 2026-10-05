@@ -87,6 +87,7 @@ The app needs to have run at least once first.
   - **Notch:** a tiny spinning record and the pet beside the MacBook notch. Hover over it to see the record big with its cover, plus the song, album, controls and progress.
   - **Both:** the desktop turntable and the notch together.
   - **Menu bar only:** nothing on screen; control it from the menu and widgets.
+- **Settings:** right-click the turntable, click ⚙ in the crate or the expanded notch, or open Vinyl Player again from Applications. Everything is in the Library's **Settings** tab, so you don't need the menu bar icon (it can be hidden behind the notch on MacBooks).
 - **Library (⌘L in the menu):**
   - **Inbox:** records friends sent you, and records you opened from links.
   - **History:** every song you've played, with your top songs.

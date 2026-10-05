@@ -255,6 +255,9 @@ private struct NotchDetails: View {
                     }
                     .buttonStyle(PressStyle())
                     IconButton(symbol: "forward.end.fill", size: 30, ink: ink) { model.next() }
+                    Spacer()
+                    IconButton(symbol: "gearshape.fill", size: 28, ink: ink) { LibraryWindowController.shared.show(.settings) }
+                        .help("Settings")
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
