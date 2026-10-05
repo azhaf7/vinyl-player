@@ -11,6 +11,19 @@ enum MusicSource: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+/// How big the desktop turntable is drawn. Large is the original size.
+enum PlayerSize: String, CaseIterable, Identifiable {
+    case small = "Small", medium = "Medium", large = "Large"
+    var id: String { rawValue }
+    var scale: CGFloat {
+        switch self {
+        case .small: return 0.66
+        case .medium: return 0.8
+        case .large: return 1
+        }
+    }
+}
+
 enum DisplayMode: String, CaseIterable, Identifiable {
     case desktop = "Desktop player", notch = "Notch"
     var id: String { rawValue }
@@ -44,6 +57,7 @@ final class Preferences: ObservableObject {
     @Published var armFollowsGroove: Bool { didSet { d.set(armFollowsGroove, forKey: "armFollowsGroove") } }
     @Published var petOperatesArm: Bool { didSet { d.set(petOperatesArm, forKey: "petOperatesArm") } }
     @Published var floatAboveWindows: Bool { didSet { d.set(floatAboveWindows, forKey: "floatAboveWindows") } }
+    @Published var playerSize: PlayerSize { didSet { d.set(playerSize.rawValue, forKey: "playerSize") } }
     @Published var shareBaseURL: String { didSet { d.set(shareBaseURL, forKey: "shareBaseURL") } }
     @Published var senderName: String { didSet { d.set(senderName, forKey: "senderName") } }
     @Published var musicSource: MusicSource { didSet { d.set(musicSource.rawValue, forKey: "musicSource") } }
@@ -66,6 +80,7 @@ final class Preferences: ObservableObject {
         armFollowsGroove = d.bool(forKey: "armFollowsGroove")
         petOperatesArm = d.bool(forKey: "petOperatesArm")
         floatAboveWindows = d.bool(forKey: "floatAboveWindows")
+        playerSize = PlayerSize(rawValue: d.string(forKey: "playerSize") ?? "") ?? .medium
         shareBaseURL = d.string(forKey: "shareBaseURL") ?? Preferences.defaultShareBaseURL
         senderName = d.string(forKey: "senderName") ?? ""
         musicSource = MusicSource(rawValue: d.string(forKey: "musicSource") ?? "") ?? .nowPlaying

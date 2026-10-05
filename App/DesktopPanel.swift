@@ -79,7 +79,11 @@ final class DesktopPanelController: NSObject, NSWindowDelegate {
 
     /// Room around the 344-wide column for the card's shadow; height leaves space for the panels below.
     static let margin: CGFloat = 40
-    static let size = NSSize(width: 344 + 2 * margin, height: margin + 58 + 384 + 12 + 320 + margin)
+    /// The layout size; the window is this times the chosen player size.
+    static let baseSize = NSSize(width: 344 + 2 * margin, height: margin + 58 + 384 + 12 + 320 + margin)
+
+    private var scale: CGFloat { Preferences.shared.playerSize.scale }
+    private var size: NSSize { NSSize(width: (Self.baseSize.width * scale).rounded(), height: (Self.baseSize.height * scale).rounded()) }
 
     init(model: PlayerModel) {
         self.model = model
@@ -104,23 +108,38 @@ final class DesktopPanelController: NSObject, NSWindowDelegate {
     func resetPosition() {
         guard let panel, let screen = NSScreen.main else { return }
         let f = screen.visibleFrame
-        panel.setFrameOrigin(NSPoint(x: f.maxX - Self.size.width - 24, y: f.maxY - Self.size.height - 8))
+        panel.setFrameOrigin(NSPoint(x: f.maxX - size.width - 24 * scale, y: f.maxY - size.height - 8))
     }
 
     func applyLevel() { panel?.applyLevel(floating: Preferences.shared.floatAboveWindows) }
 
+    /// Rebuild at the new size, keeping the top-left corner where it was.
+    func applySize() {
+        guard let old = panel else { return }
+        let wasVisible = old.isVisible
+        let topLeft = NSPoint(x: old.frame.minX, y: old.frame.maxY)
+        old.orderOut(nil)
+        panel = nil
+        build()
+        panel?.setFrameOrigin(NSPoint(x: topLeft.x, y: topLeft.y - size.height))
+        if wasVisible { panel?.orderFrontRegardless() }
+    }
+
     private func build() {
-        let p = DesktopPanel(contentRect: NSRect(origin: .zero, size: Self.size))
+        let s = scale, size = self.size
+        let p = DesktopPanel(contentRect: NSRect(origin: .zero, size: size))
         let root = PlayerRoot(model: model)
             .padding(Self.margin)
-            .frame(width: Self.size.width, height: Self.size.height, alignment: .top)
+            .frame(width: Self.baseSize.width, height: Self.baseSize.height, alignment: .top)
+            .scaleEffect(s, anchor: .topLeading)
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
         let host = NSHostingView(rootView: root)
-        host.frame = NSRect(origin: .zero, size: Self.size)
+        host.frame = NSRect(origin: .zero, size: size)
         p.contentView = host
         p.delegate = self
         p.applyLevel(floating: Preferences.shared.floatAboveWindows)
         // The progress bar (card x 22, y 302, 300 × 18) keeps dragging for scrubbing.
-        p.noDragRects = [CGRect(x: Self.margin + 18, y: Self.margin + 58 + 296, width: 308, height: 30)]
+        p.noDragRects = [CGRect(x: (Self.margin + 18) * s, y: (Self.margin + 58 + 296) * s, width: 308 * s, height: 30 * s)]
         panel = p
         if let saved = UserDefaults.standard.string(forKey: "panelOrigin") {
             p.setFrameOrigin(NSPointFromString(saved))

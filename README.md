@@ -81,6 +81,7 @@ The app needs to have run at least once first.
   - **Style:** one-tap themes (Classic, Midnight, Bubblegum, Forest, Ocean) and an accent colour. Settings → Colours → Fine-tune colours has pickers for the deck, record, label ring, card and pet.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
+- **Size:** Small, Medium (the default) or Large, from the right-click menu, the menu bar menu or Settings.
 - **Where it lives:** choose under **Show As** in the menu bar menu (the welcome window asks the first time):
   - **Desktop player:** the full turntable on your desktop.
   - **Notch:** a tiny spinning record and the pet beside the MacBook notch. Hover over it to see the record big with its cover, plus the song, album, controls and progress.

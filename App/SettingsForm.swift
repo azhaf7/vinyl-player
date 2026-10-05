@@ -15,6 +15,10 @@ struct SettingsForm: View {
                 }
                 Text(prefs.displayMode.blurb).font(.caption).foregroundStyle(.secondary)
                 if prefs.displayMode == .desktop {
+                    Picker("Size", selection: $prefs.playerSize) {
+                        ForEach(PlayerSize.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
                     Toggle("Float above other windows", isOn: $prefs.floatAboveWindows)
                     Button("Move the turntable to the top right") {
                         (NSApp.delegate as? AppDelegate)?.panel.resetPosition()

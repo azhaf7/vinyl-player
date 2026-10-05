@@ -43,6 +43,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject, UNUs
         prefs.$floatAboveWindows.sink { [weak self] _ in
             DispatchQueue.main.async { self?.panel.applyLevel() }
         }.store(in: &bag)
+        prefs.$playerSize.removeDuplicates().dropFirst().sink { [weak self] _ in
+            DispatchQueue.main.async { self?.panel.applySize() }
+        }.store(in: &bag)
 
         // Accounts and in-app sharing.
         let social = SocialService.shared
@@ -160,6 +163,9 @@ private struct MenuContent: View {
             ForEach(DisplayMode.allCases) { Text($0.rawValue).tag($0) }
         }
         if prefs.displayMode == .desktop {
+            Picker("Size", selection: $prefs.playerSize) {
+                ForEach(PlayerSize.allCases) { Text($0.rawValue).tag($0) }
+            }
             Toggle("Float Above Windows", isOn: $prefs.floatAboveWindows)
             Button("Move Player to Top Right") { app.panel.show(); app.panel.resetPosition() }
         }

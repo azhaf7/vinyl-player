@@ -118,6 +118,11 @@ private struct PlayerCard: View {
                     Button(m.rawValue) { Preferences.shared.displayMode = m }
                 }
             }
+            Menu("Size") {
+                ForEach(PlayerSize.allCases) { z in
+                    Button((Preferences.shared.playerSize == z ? "✓ " : "") + z.rawValue) { Preferences.shared.playerSize = z }
+                }
+            }
         }
     }
 }
