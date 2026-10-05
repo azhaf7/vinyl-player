@@ -8,7 +8,6 @@ What's included:
   - The record spins in 3D and resumes from the same angle.
   - The tonearm drops and lifts, and follows the groove.
   - The pet walks over, works the arm, swaps and flips records, dances, blinks, dozes off and unlocks headphones.
-  - There's a needle-drop sound and crackle.
   - Covers are the real album art, and the colours come from the cover.
   - The crate has Up next, record colours and pets.
   - You can share a song as a record.
@@ -125,7 +124,7 @@ Any static host works: upload the `web/` folder and paste the page's address int
 ## Project layout
 
 ```
-App/        Desktop player, menu bar, settings, artwork, sound, widget bridge
+App/        Desktop player, menu bar, settings, artwork, widget bridge
 Widgets/    WidgetKit extension: small, medium and large widgets and their buttons
 Shared/     Code both targets use: songs, records, pet sprites, shared storage
 Config/     Info.plists and entitlements

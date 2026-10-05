@@ -129,7 +129,6 @@ private struct MenuContent: View {
         Divider()
         Toggle("Show the Pet", isOn: $prefs.showPet)
         Toggle("Pet Operates the Tonearm", isOn: $prefs.petOperatesArm)
-        Toggle("Sound", isOn: $prefs.sound)
         Picker("Appearance", selection: $prefs.theme) {
             ForEach(ThemeChoice.allCases) { Text($0.rawValue).tag($0) }
         }

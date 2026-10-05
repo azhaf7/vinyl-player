@@ -173,7 +173,6 @@ struct SharedRecordView: View {
     private func open() {
         guard openedAt == nil else { return }
         withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 1.1)) { openedAt = Date() }
-        if Preferences.shared.sound { SoundEngine.shared.needleDrop() }
     }
 
     private var query: String {

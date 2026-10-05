@@ -44,7 +44,6 @@ struct SettingsForm: View {
             Section("Turntable") {
                 Toggle("Pet operates the tonearm", isOn: $prefs.petOperatesArm)
                 Toggle("Tonearm follows the groove", isOn: $prefs.armFollowsGroove)
-                Toggle("Needle drop and crackle", isOn: $prefs.sound)
                 Picker("Spin-up", selection: $prefs.drive) {
                     ForEach(DriveChoice.allCases) { Text($0.rawValue).tag($0) }
                 }

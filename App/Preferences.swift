@@ -52,7 +52,6 @@ final class Preferences: ObservableObject {
     private let d = UserDefaults.standard
 
     @Published var theme: ThemeChoice { didSet { d.set(theme.rawValue, forKey: "theme") } }
-    @Published var sound: Bool { didSet { d.set(sound, forKey: "sound") } }
     @Published var drive: DriveChoice { didSet { d.set(drive.rawValue, forKey: "drive") } }
     @Published var armFollowsGroove: Bool { didSet { d.set(armFollowsGroove, forKey: "armFollowsGroove") } }
     @Published var petOperatesArm: Bool { didSet { d.set(petOperatesArm, forKey: "petOperatesArm") } }
@@ -72,9 +71,8 @@ final class Preferences: ObservableObject {
 
     private init() {
         let d = UserDefaults.standard
-        d.register(defaults: ["sound": true, "armFollowsGroove": true, "petOperatesArm": true, "floatAboveWindows": false])
+        d.register(defaults: ["armFollowsGroove": true, "petOperatesArm": true, "floatAboveWindows": false])
         theme = ThemeChoice(rawValue: d.string(forKey: "theme") ?? "") ?? .system
-        sound = d.bool(forKey: "sound")
         drive = DriveChoice(rawValue: d.string(forKey: "drive") ?? "") ?? .direct
         armFollowsGroove = d.bool(forKey: "armFollowsGroove")
         petOperatesArm = d.bool(forKey: "petOperatesArm")

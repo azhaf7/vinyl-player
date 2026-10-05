@@ -74,7 +74,6 @@ final class PlayerModel {
     @ObservationIgnored private var shadowH = Tween(12, duration: 850, curve: .armSwing)
     @ObservationIgnored private var shadowOp = Tween(0.38, duration: 450, curve: .ease, jump: 0.01)
     @ObservationIgnored private var wasLow: Bool?
-    @ObservationIgnored private var crackling = false
     @ObservationIgnored private var stuck = 0.0
     @ObservationIgnored private var listened = 0.0
     @ObservationIgnored private var timers: [DispatchWorkItem] = []
@@ -203,10 +202,6 @@ final class PlayerModel {
 
         applyArm(p, dt: dt, tiltOverride: tiltOverride)
 
-        let want = motor && armLow && prefs.sound
-        SoundEngine.shared.enabled = prefs.sound
-        if want != crackling { crackling = want; SoundEngine.shared.crackle(want) }
-
         if motor {
             let before = listened
             listened += dt
@@ -233,10 +228,7 @@ final class PlayerModel {
         if tilt != armTilt { armTilt = tilt }
         if shadowH.value != armShadowH { armShadowH = shadowH.value }
         if shadowOp.value != armShadowOpacity { armShadowOpacity = shadowOp.value }
-        if armLow != wasLow {
-            if armLow && wasLow != nil && prefs.sound { SoundEngine.shared.needleDrop() }
-            wasLow = armLow
-        }
+        if armLow != wasLow { wasLow = armLow }
     }
 
     // MARK: Transport

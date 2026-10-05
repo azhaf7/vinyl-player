@@ -276,7 +276,7 @@ final class WelcomeWindowController {
 
     func show(model: PlayerModel) {
         if window == nil {
-            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 520),
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 560),
                              styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
             w.titlebarAppearsTransparent = true
             w.titleVisibility = .hidden
@@ -295,11 +295,12 @@ private struct WelcomeView: View {
     let done: () -> Void
     @ObservedObject private var prefs = Preferences.shared
     @State private var step = 0
+    @State private var chosenPet = 0
 
     var body: some View {
         VStack(spacing: 22) {
-            PetSprite(pet: model.pet, pose: PetPose(arms: .up, eyes: .happy), pixel: 4)
             if step == 0 {
+                Image(systemName: "record.circle").font(.system(size: 48)).foregroundStyle(Tokens.accent.color)
                 Text("Where should your turntable live?").font(.title.bold())
                 HStack(spacing: 10) {
                     ForEach(DisplayMode.allCases) { m in
@@ -318,16 +319,48 @@ private struct WelcomeView: View {
                 }
                 Text("Change this anytime in Settings: right-click the turntable, click ⚙ in the notch, or open Vinyl Player again from Applications.")
                     .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 480)
-                Button("Start listening") { finish() }
+                Button("Next") { chosenPet = model.pet; withAnimation(.easeInOut(duration: 0.25)) { step = 1 } }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
+            } else {
+                PetSprite(pet: chosenPet, pose: PetPose(arms: .up, eyes: .happy), pixel: 4)
+                Text("Start with a pet?").font(.title.bold())
+                Text("A little pixel pet lives next to your record. It dances while the music plays and works the tonearm. You can turn it off anytime in Settings or by right-clicking the turntable.")
+                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 480)
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(64), spacing: 10), count: 5), spacing: 10) {
+                    ForEach(Array(PetSpec.all.enumerated()), id: \.offset) { i, p in
+                        VStack(spacing: 4) {
+                            PetSprite(pet: i, pose: PetPose(), pixel: 2)
+                                .frame(height: 38, alignment: .bottom)
+                            Text(p.name).font(.caption)
+                        }
+                        .frame(width: 64, height: 66)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(chosenPet == i ? 0.1 : 0.04)))
+                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(chosenPet == i ? Tokens.accent.color : .clear, lineWidth: 2))
+                        .contentShape(Rectangle())
+                        .onTapGesture { chosenPet = i }
+                        .accessibilityLabel(p.name)
+                        .accessibilityAddTraits(chosenPet == i ? .isSelected : [])
+                    }
+                }
+                HStack(spacing: 12) {
+                    Button("Back") { withAnimation(.easeInOut(duration: 0.25)) { step = 0 } }
+                    Spacer()
+                    Button("Start without a pet") { finish(pet: false) }
+                    Button("Start with " + PetSpec.at(chosenPet).name) { finish(pet: true) }
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
+                }
+                .frame(maxWidth: 480)
             }
         }
         .padding(32)
-        .frame(width: 640, height: 520)
+        .frame(width: 640, height: 560)
     }
 
-    private func finish() {
+    private func finish(pet: Bool) {
+        prefs.showPet = pet
+        if pet { model.selectPet(chosenPet) }
         prefs.didOnboard = true
         done()
     }
