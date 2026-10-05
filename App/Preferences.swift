@@ -11,6 +11,25 @@ enum MusicSource: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum DisplayMode: String, CaseIterable, Identifiable {
+    case desktop = "Desktop player", notch = "Notch", menuBar = "Menu bar only"
+    var id: String { rawValue }
+    var symbol: String {
+        switch self {
+        case .desktop: return "record.circle"
+        case .notch: return "rectangle.topthird.inset.filled"
+        case .menuBar: return "menubar.rectangle"
+        }
+    }
+    var blurb: String {
+        switch self {
+        case .desktop: return "The full turntable on your desktop, with the pet walking over to work the tonearm."
+        case .notch: return "A tiny spinning record and the pet beside the notch. Hover for the song and controls."
+        case .menuBar: return "Nothing on screen; control it from the menu bar and widgets."
+        }
+    }
+}
+
 enum DriveChoice: String, CaseIterable, Identifiable {
     case direct = "Direct drive", belt = "Belt drive"
     var id: String { rawValue }
@@ -30,7 +49,8 @@ final class Preferences: ObservableObject {
     @Published var shareBaseURL: String { didSet { d.set(shareBaseURL, forKey: "shareBaseURL") } }
     @Published var senderName: String { didSet { d.set(senderName, forKey: "senderName") } }
     @Published var musicSource: MusicSource { didSet { d.set(musicSource.rawValue, forKey: "musicSource") } }
-    @Published var notchMode: Bool { didSet { d.set(notchMode, forKey: "notchMode") } }
+    @Published var displayMode: DisplayMode { didSet { d.set(displayMode.rawValue, forKey: "displayMode") } }
+    @Published var didOnboard: Bool { didSet { d.set(didOnboard, forKey: "didOnboard") } }
 
     /// Where the Shared Record page (web/shared-record) is hosted.
     static let defaultShareBaseURL = "https://azhaf7.github.io/vinyl-player/shared-record/"
@@ -47,8 +67,8 @@ final class Preferences: ObservableObject {
         shareBaseURL = d.string(forKey: "shareBaseURL") ?? Preferences.defaultShareBaseURL
         senderName = d.string(forKey: "senderName") ?? ""
         musicSource = MusicSource(rawValue: d.string(forKey: "musicSource") ?? "") ?? .nowPlaying
-        // On by default on MacBooks with a notch.
-        notchMode = d.object(forKey: "notchMode") as? Bool ?? NotchController.screenHasNotch
+        displayMode = DisplayMode(rawValue: d.string(forKey: "displayMode") ?? "") ?? .desktop
+        didOnboard = d.bool(forKey: "didOnboard")
     }
 
     var launchAtLogin: Bool {

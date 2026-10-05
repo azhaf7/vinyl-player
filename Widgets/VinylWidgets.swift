@@ -232,7 +232,7 @@ private struct SmallView: View {
         Fit(ref: CGSize(width: 170, height: 170)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 118, artInset: 35)
+                    WidgetRecord(snap: s, item: s.current, diameter: 118, artInset: 24)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 12, y: 12)
@@ -270,7 +270,7 @@ private struct MediumView: View {
         Fit(ref: CGSize(width: 364, height: 170)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 138, artInset: 44)
+                    WidgetRecord(snap: s, item: s.current, diameter: 138, artInset: 28)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 76, y: 16)
@@ -310,7 +310,7 @@ private struct LargeView: View {
         Fit(ref: CGSize(width: 364, height: 382)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 172, artInset: 55)
+                    WidgetRecord(snap: s, item: s.current, diameter: 172, artInset: 36)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 112, y: 18)
@@ -372,7 +372,7 @@ private struct LargeView: View {
                         ForEach(s.upNext, id: \.index) { u in
                             HStack(spacing: 8) {
                                 MiniRecord(diameter: 40, style: VinylStyle.at(s.vinylIndex), art: SharedStore.coverImage(u.coverFile),
-                                           artIndex: u.index, artInset: 12, sheen: false)
+                                           artIndex: u.index, artInset: 8, sheen: false)
                                 Text(u.title)
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(look.ink2)

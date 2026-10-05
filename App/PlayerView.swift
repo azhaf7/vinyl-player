@@ -293,7 +293,7 @@ private struct SharePanel: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 14) {
                 ZStack(alignment: .topLeading) {
-                    MiniRecord(diameter: 72, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index, artInset: 23)
+                    MiniRecord(diameter: 72, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index, artInset: 15)
                         .shadow(color: .black.opacity(0.4), radius: 6, x: 4, y: 6)
                         .offset(x: 34, y: 3)
                     CoverArt(image: art, index: model.index)
@@ -302,6 +302,8 @@ private struct SharePanel: View {
                         .shadow(color: .black.opacity(0.4), radius: 4, x: 3)
                 }
                 .frame(width: 120, height: 78, alignment: .topLeading)
+                .onTapGesture { if let url = model.shareURL() { NSWorkspace.shared.open(url) } }
+                .help("Preview what your friend sees")
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Share as a record").font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink3)
                     Text(model.track.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(ink.ink)
@@ -323,22 +325,80 @@ private struct SharePanel: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(PressStyle(pressed: 0.97))
-                Button {
-                    if let url = model.shareURL() { NSWorkspace.shared.open(url) }
-                } label: {
-                    Text("Preview")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(ink.ink)
-                        .frame(maxWidth: .infinity, minHeight: 36)
-                        .background(Capsule().fill(ink.track))
-                        .contentShape(Capsule())
+                if let url = model.shareURL() {
+                    // Messages, AirDrop, Mail…: friends without an account get the sealed record as a link.
+                    ShareLink(item: url, subject: Text(model.track.title),
+                              message: Text("I sent you a record: \(model.track.title) by \(model.track.artist)")) {
+                        Text("Share…")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(ink.ink)
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .background(Capsule().fill(ink.track))
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(PressStyle(pressed: 0.97))
                 }
-                .buttonStyle(PressStyle(pressed: 0.97))
             }
+            FriendSendRow(model: model, ink: ink)
         }
         .padding(16)
         .frame(width: 344, alignment: .leading)
         .background(GlassBackground(ink: ink, radius: 24))
+    }
+}
+
+/// Send the current song straight to a friend's in-app inbox.
+private struct FriendSendRow: View {
+    let model: PlayerModel
+    let ink: Ink
+    @ObservedObject private var social = SocialService.shared
+    @State private var status: String?
+
+    var body: some View {
+        switch social.state {
+        case .notConfigured:
+            EmptyView()
+        case .signedOut, .needsUsername:
+            Text(social.setupError == nil ? "Setting up sharing with friends…" : "Sharing with friends isn't available right now.")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(ink.ink3)
+        case .signedIn:
+            VStack(alignment: .leading, spacing: 8) {
+                Text(status ?? "Send to a friend in the app")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(status == nil ? ink.ink3 : Tokens.accent.color)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(social.friends) { f in
+                            Button { send(to: f) } label: {
+                                HStack(spacing: 6) {
+                                    PetSprite(pet: PetSpec.all.firstIndex(where: { $0.name == f.pet }) ?? 0, pose: PetPose(), pixel: 1.25)
+                                    Text("@" + f.username).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
+                                }
+                                .padding(.horizontal, 10).frame(height: 30)
+                                .background(Capsule().fill(ink.track))
+                            }
+                            .buttonStyle(PressStyle(pressed: 0.95))
+                        }
+                        Button { LibraryWindowController.shared.show(.friends) } label: {
+                            Label(social.friends.isEmpty ? "Add friends" : "Add", systemImage: "plus")
+                                .font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink2)
+                                .padding(.horizontal, 10).frame(height: 30)
+                                .background(Capsule().strokeBorder(ink.track, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func send(to f: Profile) {
+        guard !(model.isLive && model.track.sourceID == nil) else { status = "Play a song first"; return }
+        status = "Sending to @\(f.username)…"
+        social.send(model.track, to: f, message: "", pet: PetSpec.at(model.pet).name) { err in
+            status = err ?? "Sent “\(model.track.title)” to @\(f.username)"
+        }
     }
 }
 
@@ -401,7 +461,7 @@ private struct CratePanel: View {
                     ForEach(Array(order.enumerated()), id: \.element) { n, i in
                         let t = tracks[i]
                         VStack(alignment: .leading, spacing: 6) {
-                            MiniRecord(diameter: 84, style: VinylStyle.at(model.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 26, spindle: 6)
+                            MiniRecord(diameter: 84, style: VinylStyle.at(model.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 17, spindle: 6)
                                 .overlay(ring(n == 0))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(t.title).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
@@ -425,7 +485,7 @@ private struct CratePanel: View {
         return HStack(spacing: 0) {
             ForEach(Array(VinylStyle.all.enumerated()), id: \.offset) { i, v in
                 VStack(spacing: 6) {
-                    MiniRecord(diameter: 54, style: v, art: art, artIndex: model.index, artInset: 17)
+                    MiniRecord(diameter: 54, style: v, art: art, artIndex: model.index, artInset: 11)
                         .overlay(ring(i == model.vinyl))
                     Text(v.name).font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink2)
                 }

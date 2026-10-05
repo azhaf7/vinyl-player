@@ -81,9 +81,19 @@ The app needs to have run at least once first.
   - **Pets:** pick Mochi, Bao, Pip or Tofu. Headphones unlock after a while of listening.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
-- **Notch:** on MacBooks with a notch, a tiny spinning record and the pet sit beside it at the top of the screen. Hover over it to see the song, the controls and the progress. Turn it on or off with **Show in the Notch** in the menu bar menu.
+- **Where it lives:** choose under **Show As** in the menu bar menu (the welcome window asks the first time):
+  - **Desktop player:** the full turntable on your desktop.
+  - **Notch:** a tiny spinning record and the pet beside the MacBook notch. Hover over it to see the record big with its cover, plus the song, album, controls and progress.
+  - **Menu bar only:** nothing on screen; control it from the menu and widgets.
+- **Library (⌘L in the menu):**
+  - **Inbox:** records friends sent you, and records you opened from links.
+  - **History:** every song you've played, with your top songs.
+  - **Friends:** add friends by their code and send them songs.
+  - **Account:** your friend code.
 - **Unlocks:** listening unlocks headphones (10 min), Kiki the fox (30 min), sunglasses (1 h) and Nori the penguin (2 h). See your progress in the crate's **Pets** tab.
-- **Shared records:** the share page has an "Open it on your turntable" link for friends who have the app. It opens the record in Vinyl Player.
+- **Sharing:** open the share panel (⇧):
+  - **Share…** sends a sealed-record link through Messages, AirDrop or Mail. Anyone can open it in a browser; friends with the app can open it on their turntable, and it's saved in their Inbox.
+  - **Send to a friend** puts the record straight into a friend's in-app Inbox, with a notification. There's no login: each Mac gets a friend code like `@mochi4821`, and friends add each other's code once. This needs the one-time setup below.
 - **Move the player:** drag it from anywhere: the record, the pet or the buttons. A click still works as a click; only an actual drag moves it.
 - **Menu bar → Float Above Windows:** keeps it on top instead of on the desktop.
 - **Menu bar → Move Player to Top Right:** brings it back if it gets lost.
@@ -106,6 +116,20 @@ Vercel redeploys automatically whenever `web/` changes.
 Any static host works: upload the `web/` folder and paste the page's address into **Settings… → Sharing**.
 
 [Netlify Drop](https://app.netlify.com/drop) works: drag the `web` folder onto it. GitHub Pages also works if the repository is public.
+
+## Accounts and sharing (one-time setup)
+
+In-app sending between friends uses a free [Supabase](https://supabase.com) project. Nobody has to log in; only you (whoever builds the app) set this up once:
+
+1. Create a free project at supabase.com.
+2. **SQL Editor → New query:** paste the contents of `supabase/schema.sql` and click **Run**.
+3. **Authentication → Sign In / Providers:** turn on **Allow anonymous sign-ins**.
+4. **Project Settings → API:** copy the **Project URL** and the **anon public** key into `App/Social/SocialConfig.swift`.
+5. Build again. Each Mac then gets its own friend code automatically.
+
+The anon key is meant to be public. The rules in `schema.sql` make sure people can only read records sent to or from them, and can only send as themselves.
+
+Without this setup, everything else works, including sharing records as links.
 
 ## Project layout
 

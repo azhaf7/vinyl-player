@@ -9,6 +9,7 @@ struct Track: Codable, Hashable {
     var tintHex: String       // used until the real cover's colour is known
     var artworkURL: String? = nil   // from the music app, when it provides one
     var sourceID: String? = nil     // the music app's id for the song
+    var album: String? = nil
 
     /// Cache key shared by artwork lookup, custom covers and the widget snapshot.
     var key: String { (title + "|" + artist).lowercased() }
@@ -17,12 +18,12 @@ struct Track: Codable, Hashable {
 
 enum Catalog {
     static let tracks: [Track] = [
-        Track(title: "Blinding Lights", artist: "The Weeknd", duration: 200, bpm: 86, tintHex: "#5a78c8"),
-        Track(title: "Dreams", artist: "Fleetwood Mac", duration: 257, bpm: 120, tintHex: "#d9784a"),
-        Track(title: "Get Lucky", artist: "Daft Punk", duration: 248, bpm: 116, tintHex: "#3fa58a"),
-        Track(title: "Redbone", artist: "Childish Gambino", duration: 327, bpm: 80, tintHex: "#e0a24a"),
-        Track(title: "Electric Feel", artist: "MGMT", duration: 229, bpm: 103, tintHex: "#7aa860"),
-        Track(title: "Heat Waves", artist: "Glass Animals", duration: 239, bpm: 81, tintHex: "#c86aa8"),
+        Track(title: "Blinding Lights", artist: "The Weeknd", duration: 200, bpm: 86, tintHex: "#5a78c8", album: "After Hours"),
+        Track(title: "Dreams", artist: "Fleetwood Mac", duration: 257, bpm: 120, tintHex: "#d9784a", album: "Rumours"),
+        Track(title: "Get Lucky", artist: "Daft Punk", duration: 248, bpm: 116, tintHex: "#3fa58a", album: "Random Access Memories"),
+        Track(title: "Redbone", artist: "Childish Gambino", duration: 327, bpm: 80, tintHex: "#e0a24a", album: "“Awaken, My Love!”"),
+        Track(title: "Electric Feel", artist: "MGMT", duration: 229, bpm: 103, tintHex: "#7aa860", album: "Oracular Spectacular"),
+        Track(title: "Heat Waves", artist: "Glass Animals", duration: 239, bpm: 81, tintHex: "#c86aa8", album: "Dreamland"),
     ]
 
     /// Tracks 1–3 are side A, 4–6 side B.

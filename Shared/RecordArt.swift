@@ -57,10 +57,9 @@ enum DiscImage {
             ring(4, dark: 0, lightWidth: 1, light: 0.03)
             ring(14, dark: 0.55, lightWidth: 1.5, light: 0.04)
             ring(34, dark: 0.55, lightWidth: 2, light: 0.035)
-            ring(52, dark: 0.5, lightWidth: 1.5, light: 0.03)
-            ctx.setFillColor(Tokens.labelRing.cgColor); ctx.fillEllipse(in: disc(R - 64 * k))
-            ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(1); ctx.strokeEllipse(in: disc(R - 64 * k + 0.5))
-            ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(R - 72 * k))
+            ctx.setFillColor(Tokens.labelRing.cgColor); ctx.fillEllipse(in: disc(R - 42 * k))
+            ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(1); ctx.strokeEllipse(in: disc(R - 42 * k + 0.5))
+            ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(R - 49 * k))
         }
         let img = ctx.makeImage()
         cache[key] = img

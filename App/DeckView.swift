@@ -188,9 +188,9 @@ private struct SpinningSurface: View {
             if let img = DiscImage.make(style: style, diameter: 248, detailed: true) {
                 Image(decorative: img, scale: 2).resizable()
             }
-            // Label: album art inset 73 (Ø102) with a slight bevel.
+            // Label: album art inset 50 (Ø148) with a slight bevel.
             CoverArt(image: art, index: artIndex)
-                .frame(width: 102, height: 102)
+                .frame(width: 148, height: 148)
                 .clipShape(Circle())
                 .overlay(
                     ZStack {

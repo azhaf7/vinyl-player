@@ -3,12 +3,24 @@ import AppKit
 
 /// A song someone shared: `vinyl://record?song=…&by=…&from=…&pet=…&spotify=…`
 /// (the web page's fragment uses the same names).
-struct SharedRecord: Equatable {
+struct SharedRecord: Codable, Hashable {
     var title: String
     var artist: String
     var from: String
     var pet: String
     var spotifyID: String?
+    var artworkURL: String?
+    var message: String?
+
+    init(share: Share) {
+        title = share.title
+        artist = share.artist
+        from = share.sender.map { $0.name } ?? "A friend"
+        pet = share.pet ?? ""
+        spotifyID = share.spotifyId
+        artworkURL = share.artworkUrl
+        message = share.message
+    }
 
     init?(url: URL) {
         guard let comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
@@ -27,7 +39,7 @@ struct SharedRecord: Equatable {
 
     var track: Track {
         Track(title: title, artist: artist, duration: 240, bpm: 100, tintHex: "#8a6a4a",
-              sourceID: spotifyID.map { "spotify:track:" + $0 })
+              artworkURL: artworkURL, sourceID: spotifyID.map { "spotify:track:" + $0 })
     }
 }
 
@@ -98,11 +110,14 @@ struct SharedRecordView: View {
                         VStack(spacing: 4) {
                             Text(record.title).font(.system(size: 30, weight: .bold)).tracking(-0.6).foregroundStyle(.white)
                             Text(record.artist).font(.system(size: 17)).foregroundStyle(.white.opacity(0.65))
+                            if let m = record.message, !m.isEmpty {
+                                Text("“\(m)”").font(.system(size: 15).italic()).foregroundStyle(.white.opacity(0.8)).padding(.top, 6)
+                            }
                         }
                         .multilineTextAlignment(.center)
                         HStack(spacing: 10) {
-                            Button { openSpotify() } label: {
-                                Text("Play in Spotify").font(.system(size: 15, weight: .bold)).foregroundStyle(.black)
+                            Button { Spotify.play(id: record.spotifyID, title: record.title, artist: record.artist) } label: {
+                                Text(record.spotifyID != nil ? "Play on my turntable" : "Find in Spotify").font(.system(size: 15, weight: .bold)).foregroundStyle(.black)
                                     .padding(.horizontal, 22).frame(height: 46)
                                     .background(Capsule().fill(Color(hex: "#1ed760")))
                             }
@@ -128,7 +143,7 @@ struct SharedRecordView: View {
         let disc = w * 0.54, sleeve = w * 0.57
         return ZStack(alignment: .topLeading) {
             TimelineView(.animation(paused: openedAt == nil)) { ctx in
-                MiniRecord(diameter: disc, style: VinylStyle.at(0), art: art, artIndex: 0, artInset: disc * 0.325,
+                MiniRecord(diameter: disc, style: VinylStyle.at(0), art: art, artIndex: 0, artInset: disc * 0.21,
                            ringWidth: disc * 0.015, spindle: disc * 0.03, sheen: false)
                     .rotationEffect(.degrees(spinAngle(at: ctx.date)))
                     .overlay(RecordSheen())
@@ -172,17 +187,6 @@ struct SharedRecordView: View {
 
     private var query: String {
         (record.title + " " + record.artist).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? record.title
-    }
-
-    private func openSpotify() {
-        if let id = record.spotifyID, let app = URL(string: "spotify:track:" + id),
-           NSWorkspace.shared.urlForApplication(toOpen: app) != nil {
-            NSWorkspace.shared.open(app)
-        } else if let id = record.spotifyID, let web = URL(string: "https://open.spotify.com/track/" + id) {
-            NSWorkspace.shared.open(web)
-        } else if let web = URL(string: "https://open.spotify.com/search/" + query) {
-            NSWorkspace.shared.open(web)
-        }
     }
 
     private func openAppleMusic() {

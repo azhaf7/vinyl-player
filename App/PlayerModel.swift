@@ -89,6 +89,8 @@ final class PlayerModel {
     private static let EDGE = Pt(x: 238, y: 58)
     private static let SPOT = Pt(x: 242, y: 120)
     private static let SWAP = Pt(x: 128, y: 58)
+    /// Points per ms; faster than the play/pause walk (0.17) so changing songs feels snappy.
+    private static let swapWalkSpeed = 0.3
 
     @ObservationIgnored private var pMode = Mode.home
     @ObservationIgnored private var pX = 44.0
@@ -215,7 +217,7 @@ final class PlayerModel {
     }
 
     private func applyArm(_ p: Double, dt: Double, tiltOverride: Double?) {
-        let deg = armOver ? 18 + (prefs.armFollowsGroove ? 14 * p : 0) : 3
+        let deg = armOver ? 18 + (prefs.armFollowsGroove ? 10 * p : 0) : 3
         swing.set(deg); swing.advance(dt)
         lift.set(armLow ? -1.4 : 3.5); lift.advance(dt)
         shadowH.set(armLow ? 1 : 12); shadowH.advance(dt)
@@ -241,16 +243,20 @@ final class PlayerModel {
 
     private func clearTimers() { timers.forEach { $0.cancel() }; timers.removeAll() }
 
-    private func doPlay() {
+    /// `quick` is used after a record swap, so a song change doesn't drag.
+    private func doPlay(quick: Bool = false) {
         clearTimers()
         playing = true; armOver = true
         stateChanged()
-        later(620) { [weak self] in self?.armLow = true }
-        later(980) { [weak self] in
+        later(quick ? 380 : 620) { [weak self] in self?.armLow = true }
+        later(quick ? 600 : 980) { [weak self] in
             guard let self else { return }
             self.motor = true
             self.remotePlaying = true
             self.service.play()
+            if !(self.isLive && self.track.sourceID == nil) {
+                HistoryStore.shared.record(self.track, source: self.service.name)
+            }
         }
     }
 
@@ -299,10 +305,10 @@ final class PlayerModel {
         if pWasPlaying {
             clearTimers()
             motor = false
-            later(300) { [weak self] in self?.armLow = false }
-            later(650) { [weak self] in self?.armOver = false }
+            later(180) { [weak self] in self?.armLow = false }
+            later(400) { [weak self] in self?.armOver = false }
         }
-        go(.walk, Pt(x: pX, y: Self.HOME.y), Self.SWAP, max(200, abs(Self.SWAP.x - pX) / 0.17))
+        go(.walk, Pt(x: pX, y: Self.HOME.y), Self.SWAP, max(150, abs(Self.SWAP.x - pX) / Self.swapWalkSpeed))
     }
 
     private func pick(_ i: Int) {
@@ -431,7 +437,7 @@ final class PlayerModel {
             break
         case .swap:
             pT += dt; arms = .up; forceEyes = .look
-            let D = pWasPlaying ? 950.0 : 150.0, OUT = 700.0, GAP = 220.0, IN = 760.0
+            let D = pWasPlaying ? 520.0 : 80.0, OUT = 440.0, GAP = 100.0, IN = 480.0
             let u = min(1, max(0, (pT - D) / OUT)), v = min(1, max(0, (pT - D - OUT - GAP) / IN))
             if pT < D { arms = .down; forceEyes = nil }
             if u >= 1 && !pSwapped {
@@ -447,8 +453,8 @@ final class PlayerModel {
             liftY = (u > 0 && u < 1 ? sin(u * PI) * 5 : 0) + (v > 0 && v < 1 ? sin(v * PI) * 3 : 0)
             if v >= 1 {
                 recY = 0; recZ = 0; recFlip = 0
-                if pWasPlaying { doPlay() }
-                go(.back, Pt(x: pX, y: pY), Self.HOME, max(200, abs(pX - Self.HOME.x) / 0.17))
+                if pWasPlaying { doPlay(quick: true) }
+                go(.back, Pt(x: pX, y: pY), Self.HOME, max(150, abs(pX - Self.HOME.x) / Self.swapWalkSpeed))
             }
         case .grab:
             pT += dt; arms = .up; forceEyes = .look

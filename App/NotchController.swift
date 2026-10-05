@@ -9,7 +9,7 @@ final class NotchState: ObservableObject {
     @Published var hasNotch = false
 
     static let wing: CGFloat = 44
-    static let expandedExtra: CGFloat = 112
+    static let expandedExtra: CGFloat = 136
     static let expandedMinWidth: CGFloat = 440
 
     var collapsedSize: CGSize { CGSize(width: notchWidth + 2 * Self.wing, height: notchHeight) }
@@ -150,6 +150,7 @@ struct NotchView: View {
                 HStack(spacing: 0) {
                     NotchRecord(model: model, art: art, size: min(22, state.notchHeight - 8))
                         .frame(width: NotchState.wing, alignment: .center)
+                        .opacity(state.expanded ? 0 : 1)
                     Spacer(minLength: state.notchWidth)
                     NotchPet(model: model, maxHeight: state.notchHeight - 4)
                         .frame(width: NotchState.wing, alignment: .center)
@@ -179,7 +180,7 @@ private struct NotchRecord: View {
 
     var body: some View {
         MiniRecord(diameter: size, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index,
-                   artInset: size * 0.3, spindle: 2, sheen: false)
+                   artInset: size * 0.2, spindle: 2, sheen: false)
             .rotationEffect(.degrees(model.discAngle))
             .overlay(RecordSheen())
     }
@@ -208,21 +209,35 @@ private struct NotchDetails: View {
 
     var body: some View {
         let ink = Ink(dark: true)
-        VStack(spacing: 10) {
-            HStack(spacing: 12) {
-                CoverArt(image: art, index: model.index)
-                    .frame(width: 52, height: 52)
-                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        HStack(spacing: 16) {
+            // The record itself, big, with the album art on its label, spinning with the turntable.
+            MiniRecord(diameter: 104, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index,
+                       artInset: 22, ringWidth: 3, spindle: 5, sheen: false)
+                .rotationEffect(.degrees(model.discAngle))
+                .overlay(RecordSheen())
+                .shadow(color: tint.opacity(0.35).color, radius: 14)
+            VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.track.title)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(ink.ink)
                     Text(model.showsStatus ? model.serviceStatus : model.track.artist)
                         .font(.system(size: 12))
                         .foregroundStyle(ink.ink2)
+                    if let album = model.track.album, !model.showsStatus {
+                        Text(album)
+                            .font(.system(size: 11))
+                            .foregroundStyle(ink.ink3)
+                    }
                 }
                 .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.white.opacity(0.14))
+                        Capsule().fill(tint.mix(.white, 0.8).color).frame(width: g.size.width * model.progress)
+                    }
+                }
+                .frame(height: 3)
                 HStack(spacing: 2) {
                     IconButton(symbol: "backward.end.fill", size: 30, ink: ink) { model.previous() }
                     Button { model.toggle() } label: {
@@ -236,13 +251,7 @@ private struct NotchDetails: View {
                     IconButton(symbol: "forward.end.fill", size: 30, ink: ink) { model.next() }
                 }
             }
-            GeometryReader { g in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.14))
-                    Capsule().fill(tint.mix(.white, 0.8).color).frame(width: g.size.width * model.progress)
-                }
-            }
-            .frame(height: 3)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

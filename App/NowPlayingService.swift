@@ -181,7 +181,7 @@ final class NowPlayingService: PlaybackService {
             lastID = info.id
             let t = Track(title: info.title, artist: info.artist.isEmpty ? info.album : info.artist,
                           duration: max(1, info.duration), bpm: 100, tintHex: "#8a6a4a",
-                          artworkURL: info.artworkURL, sourceID: info.id)
+                          artworkURL: info.artworkURL, sourceID: info.id, album: info.album.isEmpty ? nil : info.album)
             if !connected {
                 connected = true
                 tracks = [t]; current = 0
