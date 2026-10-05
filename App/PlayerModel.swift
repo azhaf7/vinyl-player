@@ -32,6 +32,7 @@ final class PlayerModel {
     private(set) var busy = false
     private(set) var wearPhones = true
     private(set) var wearShades = true
+    private(set) var wearScarf = true
     /// Total listening time; unlocks pets and accessories. Updated every few seconds.
     private(set) var listenedMinutes = 0.0
     /// Set when something new unlocks, for a moment of celebration in the crate.
@@ -120,6 +121,7 @@ final class PlayerModel {
     @ObservationIgnored private var pausedFor = 0.0
     @ObservationIgnored private var lid = 1.0
     @ObservationIgnored private var lastBeatInt = 0
+    @ObservationIgnored private var waveUntil = 0.0
 
     init() {
         let d = UserDefaults.standard
@@ -129,6 +131,7 @@ final class PlayerModel {
         pet = min(max(0, d.integer(forKey: "pet")), PetSpec.all.count - 1)
         if d.object(forKey: "wearPhones") != nil { wearPhones = d.bool(forKey: "wearPhones") }
         if d.object(forKey: "wearShades") != nil { wearShades = d.bool(forKey: "wearShades") }
+        if d.object(forKey: "wearScarf") != nil { wearScarf = d.bool(forKey: "wearScarf") }
         listened = d.double(forKey: "listenedMs")
         // Earlier versions unlocked headphones after 45 s; keep that unlock.
         if d.bool(forKey: "phonesUnlocked") { listened = max(listened, PetUnlock.headphones.minutes * 60_000) }
@@ -216,7 +219,7 @@ final class PlayerModel {
     }
 
     private func applyArm(_ p: Double, dt: Double, tiltOverride: Double?) {
-        let deg = armOver ? 18 + (prefs.armFollowsGroove ? 5 * p : 0) : 3
+        let deg = armOver ? 18 + (prefs.armFollowsGroove ? 2 * p : 0) : 3
         swing.set(deg); swing.advance(dt)
         lift.set(armLow ? -1.4 : 3.5); lift.advance(dt)
         shadowH.set(armLow ? 1 : 12); shadowH.advance(dt)
@@ -332,6 +335,14 @@ final class PlayerModel {
     func selectPet(_ i: Int) { guard isPetUnlocked(i) else { return }; pet = i; save(); stateChanged() }
     func toggleHeadphones() { wearPhones.toggle(); save(); stateChanged() }
     func toggleSunglasses() { wearShades.toggle(); save(); stateChanged() }
+    func toggleScarf() { wearScarf.toggle(); save(); stateChanged() }
+
+    /// The pet waves for a moment (e.g. a friend's record just arrived).
+    func wave() {
+        pausedFor = 0; lid = 1
+        waveUntil = clock + 2400
+        happyUntil = clock + 2400
+    }
 
     // MARK: Unlocks
 
@@ -509,6 +520,10 @@ final class PlayerModel {
         }
         happy = approach(happy, isPlaying && atHome && clock < happyUntil ? 1 : 0, dt: dt, tau: 120)
         if atHome && a > 0.5 && !reduced && bi % 2 == 0 { arms = .up }
+        if atHome && clock < waveUntil {
+            arms = Int(clock / 200) % 2 == 0 ? .up : .down
+            forceEyes = .happy
+        }
         let eyes: PetEyes = pausedFor > 20_000 ? .sleep
             : min(blink, lid) < 0.5 ? .blink
             : forceEyes ?? (happy > 0.5 ? .happy : look > 0.5 ? .look : .open)
@@ -518,7 +533,8 @@ final class PlayerModel {
         r.sway = sway; r.lift = bounce + liftY; r.tilt = tilt
         r.sx = sx; r.sy = sy; r.face = pFace
         r.shadow = max(0.4, 1 - (bounce + liftY) / 30)
-        r.pose = PetPose(arms: arms, eyes: eyes, legs: legs, headphones: headphonesOn, sunglasses: sunglassesOn)
+        r.pose = PetPose(arms: arms, eyes: eyes, legs: legs, headphones: headphonesOn, sunglasses: sunglassesOn,
+                         scarf: wearScarf ? ArtworkService.shared.tint(for: track) : nil)
         if r != petRender { petRender = r }
     }
 
@@ -559,7 +575,7 @@ final class PlayerModel {
         if !isLive { d.set(index, forKey: "trackIndex") }
         d.set(rpm, forKey: "rpm")
         d.set(vinyl, forKey: "vinyl"); d.set(pet, forKey: "pet")
-        d.set(wearPhones, forKey: "wearPhones"); d.set(wearShades, forKey: "wearShades")
+        d.set(wearPhones, forKey: "wearPhones"); d.set(wearShades, forKey: "wearShades"); d.set(wearScarf, forKey: "wearScarf")
         d.set(listened, forKey: "listenedMs")
         lastSave = Date()
     }

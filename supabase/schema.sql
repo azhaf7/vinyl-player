@@ -89,3 +89,12 @@ begin
 end $$;
 drop trigger if exists shares_rate_limit on public.shares;
 create trigger shares_rate_limit before insert on public.shares for each row execute function public.limit_shares();
+
+-- Listening together: what each person is spinning right now (shown to friends in the app).
+-- Safe to run again on an existing project.
+alter table public.profiles add column if not exists now_title text check (char_length(now_title) <= 200);
+alter table public.profiles add column if not exists now_artist text check (char_length(now_artist) <= 200);
+alter table public.profiles add column if not exists now_spotify_id text check (now_spotify_id ~ '^[A-Za-z0-9]{22}$');
+alter table public.profiles add column if not exists now_artwork_url text check (now_artwork_url ~ '^https://');
+alter table public.profiles add column if not exists now_playing boolean not null default false;
+alter table public.profiles add column if not exists now_updated_at timestamptz;

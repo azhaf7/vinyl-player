@@ -6,8 +6,25 @@ struct Profile: Codable, Identifiable, Hashable {
     var username: String
     var displayName: String?
     var pet: String?
+    var nowTitle: String?
+    var nowArtist: String?
+    var nowSpotifyId: String?
+    var nowArtworkUrl: String?
+    var nowPlaying: Bool?
+    var nowUpdatedAt: Date?
 
     var name: String { displayName?.isEmpty == false ? displayName! : "@" + username }
+
+    /// Spinning something in the last 10 minutes.
+    var isListening: Bool {
+        nowPlaying == true && nowTitle != nil && (nowUpdatedAt.map { Date().timeIntervalSince($0) < 600 } ?? false)
+    }
+
+    var nowTrack: Track? {
+        guard let t = nowTitle else { return nil }
+        return Track(title: t, artist: nowArtist ?? "", duration: 240, bpm: 100, tintHex: "#8a6a4a",
+                     artworkURL: nowArtworkUrl, sourceID: nowSpotifyId.map { "spotify:track:" + $0 })
+    }
 }
 
 /// A record someone sent.
@@ -57,6 +74,8 @@ final class SocialService: ObservableObject {
 
     /// Called with records that arrived since the last check.
     var onNewShares: (([Share]) -> Void)?
+    /// What's on the turntable now (song, playing), for "listening together".
+    var nowPlayingProvider: (() -> (Track?, Bool))?
     /// Why automatic setup failed, if it did (shown with a Retry button).
     @Published private(set) var setupError: String?
     private var petName = "mochi"
@@ -141,6 +160,7 @@ final class SocialService: ObservableObject {
     /// Re-fetch friends and records.
     func refresh() {
         guard me != nil else { return }
+        if let now = nowPlayingProvider?() { updateNowPlaying(now.0, playing: now.1) }
         loadFriends()
         loadInbox()
         loadSent()
@@ -246,6 +266,32 @@ final class SocialService: ObservableObject {
     }
 
     private struct FriendRow: Codable { var friend: Profile?; var user: Profile? }
+    private static let profileFields = "id,username,display_name,pet,now_title,now_artist,now_spotify_id,now_artwork_url,now_playing,now_updated_at"
+
+    private var lastNow: (key: String, playing: Bool, at: Date)?
+
+    /// Tells friends what you're spinning. Sent when the song or play state changes, and every
+    /// two minutes while playing so it doesn't look stale.
+    func updateNowPlaying(_ track: Track?, playing: Bool) {
+        guard let me else { return }
+        let share = Preferences.shared.shareListening
+        let key = share ? (track?.key ?? "") : ""
+        let isPlaying = share && playing && track != nil
+        if let last = lastNow, last.key == key, last.playing == isPlaying,
+           !isPlaying || Date().timeIntervalSince(last.at) < 120 { return }
+        lastNow = (key, isPlaying, Date())
+        var body: [String: Any] = ["now_playing": isPlaying, "now_updated_at": ISO8601DateFormatter().string(from: Date())]
+        if share, let t = track {
+            body["now_title"] = t.title
+            body["now_artist"] = t.artist
+            let sp = t.sourceID.flatMap { $0.hasPrefix("spotify:track:") ? String($0.dropFirst("spotify:track:".count)) : nil }
+            body["now_spotify_id"] = sp ?? NSNull()
+            body["now_artwork_url"] = t.artworkURL.flatMap { $0.hasPrefix("https://") ? $0 : nil } ?? NSNull()
+        } else {
+            body["now_title"] = NSNull(); body["now_artist"] = NSNull(); body["now_spotify_id"] = NSNull(); body["now_artwork_url"] = NSNull()
+        }
+        call("PATCH", "/rest/v1/profiles", query: [URLQueryItem(name: "id", value: "eq." + me.id.uuidString.lowercased())], json: body) { _ in }
+    }
 
     /// People you added and people who added you.
     private func loadFriends() {
@@ -253,7 +299,7 @@ final class SocialService: ObservableObject {
         let id = me.id.uuidString.lowercased()
         call("GET", "/rest/v1/friendships", query: [
             URLQueryItem(name: "or", value: "(user_id.eq.\(id),friend_id.eq.\(id))"),
-            URLQueryItem(name: "select", value: "friend:profiles!friendships_friend_id_fkey(id,username,display_name,pet),user:profiles!friendships_user_id_fkey(id,username,display_name,pet)"),
+            URLQueryItem(name: "select", value: "friend:profiles!friendships_friend_id_fkey(\(Self.profileFields)),user:profiles!friendships_user_id_fkey(\(Self.profileFields))"),
         ]) { [weak self] result in
             guard case .success(let data) = result, let rows = try? Self.decoder.decode([FriendRow].self, from: data) else { return }
             var seen = Set<UUID>(), list: [Profile] = []

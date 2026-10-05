@@ -55,6 +55,7 @@ struct SettingsForm: View {
                 }
                 Toggle("Headphones", isOn: Binding(get: { model.wearPhones }, set: { _ in model.toggleHeadphones() }))
                 Toggle("Sunglasses", isOn: Binding(get: { model.wearShades }, set: { _ in model.toggleSunglasses() }))
+                Toggle("Scarf in the album's colour", isOn: Binding(get: { model.wearScarf }, set: { _ in model.toggleScarf() }))
             }
 
             Section("Colours") {
@@ -75,6 +76,19 @@ struct SettingsForm: View {
                 color("Card", \.card, RGB(hex: "#1e1e22"))
                 color("Pet", \.pet, PetSpec.at(model.pet).palette["o"] ?? .white)
                 Button("Reset all colours") { prefs.style = PlayerStyle(); model.selectVinyl(0) }
+            }
+
+            Section("Keyboard shortcuts") {
+                Toggle("Control the music from anywhere", isOn: $prefs.hotKeys)
+                ForEach(HotKeys.shortcuts, id: \.id) { s in
+                    Text(s.label).font(.callout.monospaced()).foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Friends") {
+                Toggle("Show friends what I'm listening to", isOn: $prefs.shareListening)
+                Text("Friends see the song on your turntable in their Friends list and can listen along.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("Sharing") {

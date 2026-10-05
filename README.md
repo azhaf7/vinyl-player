@@ -78,7 +78,7 @@ The app needs to have run at least once first.
 - **Crate (☰):**
   - **Up next:** tap a record to play it.
   - **Records:** pick a vinyl colour, or your own with the colour well under **Custom**.
-  - **Pets:** ten pets: Mochi, Bao, Pip, Tofu, Kiki, Nori, Biscuit, Peanut, Quack and Ember. Headphones and sunglasses can be switched on and off. Everything is free.
+  - **Pets:** ten pets: Mochi, Bao, Pip, Tofu, Kiki, Nori, Biscuit, Peanut, Quack and Ember. Headphones, sunglasses and a scarf in the album's colour can be switched on and off. Everything is free. The pet waves when a friend's record arrives and dozes when the music stops.
   - **Style:** one-tap themes (Classic, Midnight, Bubblegum, Forest, Ocean), plus colour pickers for the deck, record, label ring, accent, card and pet. The arrow next to a colour resets it.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
@@ -88,10 +88,16 @@ The app needs to have run at least once first.
   - **Both:** the desktop turntable and the notch together.
   - **Menu bar only:** nothing on screen; control it from the menu and widgets.
 - **Settings:** right-click the turntable, click ⚙ in the crate or the expanded notch, or open Vinyl Player again from Applications. Everything is in the Library's **Settings** tab, so you don't need the menu bar icon (it can be hidden behind the notch on MacBooks).
+- **Like a song:** ♥ next to the title, in the notch, in the menu or with ⌃⌥L.
+- **Colours:** the 🎨 button on the turntable opens themes and colour pickers.
+- **Keyboard shortcuts (anywhere):** ⌃⌥Space play/pause, ⌃⌥→ next, ⌃⌥← previous, ⌃⌥L like. You can turn them off in Settings.
 - **Library (⌘L in the menu):**
   - **Inbox:** records friends sent you, and records you opened from links.
   - **History:** every song you've played, with your top songs.
-  - **Friends:** add friends by their code and send them songs.
+  - **Liked** and **Playlists:** make playlists from any song (the playlist button on a row) and play them in order through Spotify or the sample songs.
+  - **Crate:** flip through your records like a crate at a record shop.
+  - **Weekly Recap:** your week in minutes, top artist and top songs, as a card you can copy, save or share.
+  - **Friends:** add friends by their code, send them songs, and see what they're spinning right now ("Listen along" plays it in your Spotify). Turn off "Show friends what I'm listening to" in Settings to keep yours private.
   - **Account:** your friend code.
 - **Sharing:** open the share panel (⇧):
   - **Share…** sends a sealed-record link through Messages, AirDrop or Mail. Anyone can open it in a browser; friends with the app can open it on their turntable, and it's saved in their Inbox.

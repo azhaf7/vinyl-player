@@ -164,9 +164,14 @@ private struct InfoRow: View {
     var body: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.track.title)
-                    .font(.system(size: 13, weight: .semibold)).tracking(-0.13)
-                    .foregroundStyle(ink.ink)
+                HStack(spacing: 5) {
+                    Text(model.track.title)
+                        .font(.system(size: 13, weight: .semibold)).tracking(-0.13)
+                        .foregroundStyle(ink.ink)
+                    if !(model.isLive && model.track.sourceID == nil) {
+                        LikeButton(track: model.track, size: 11, tint: pstyle.accentColor.color)
+                    }
+                }
                 if model.needsPermission {
                     Text("Click to allow access to your music app")
                         .font(.system(size: 12, weight: .medium))
@@ -194,10 +199,14 @@ private struct InfoRow: View {
                     model.shareOpen.toggle(); model.drawer = nil; model.copied = false
                 }
                 .help("Share as a record")
-                IconButton(symbol: "line.3.horizontal", size: 30, ink: ink, selected: model.drawer != nil) {
-                    model.drawer = model.drawer == nil ? .queue : nil; model.shareOpen = false
+                IconButton(symbol: "line.3.horizontal", size: 30, ink: ink, selected: model.drawer != nil && model.drawer != .style) {
+                    model.drawer = model.drawer == nil || model.drawer == .style ? .queue : nil; model.shareOpen = false
                 }
-                .help("Crate")
+                .help("Crate: up next, records and pets")
+                IconButton(symbol: "paintpalette.fill", size: 28, ink: ink, selected: model.drawer == .style) {
+                    model.drawer = model.drawer == .style ? nil : .style; model.shareOpen = false
+                }
+                .help("Colours and themes")
             }
         }
     }
@@ -486,7 +495,7 @@ private struct CratePanel: View {
                     ForEach(Array(order.enumerated()), id: \.element) { n, i in
                         let t = tracks[i]
                         VStack(alignment: .leading, spacing: 6) {
-                            MiniRecord(diameter: 84, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 17, spindle: 6)
+                            MiniRecord(diameter: 84, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 8, spindle: 6)
                                 .overlay(ring(n == 0))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(t.title).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
@@ -511,7 +520,7 @@ private struct CratePanel: View {
         return HStack(spacing: 0) {
             ForEach(Array((VinylStyle.all + [custom]).enumerated()), id: \.offset) { i, v in
                 VStack(spacing: 6) {
-                    MiniRecord(diameter: 46, style: v, art: art, artIndex: model.index, artInset: 9, ring: pstyle.labelRing)
+                    MiniRecord(diameter: 46, style: v, art: art, artIndex: model.index, artInset: 5, ring: pstyle.labelRing)
                         .overlay(ring(i == model.vinyl))
                         .onTapGesture { model.selectVinyl(i) }
                     if i == VinylStyle.customIndex {
@@ -632,6 +641,17 @@ private struct CratePanel: View {
                 accessory(.headphones, on: model.wearPhones) { model.toggleHeadphones() }
                 accessory(.sunglasses, on: model.wearShades) { model.toggleSunglasses() }
             }
+            HStack(spacing: 6) {
+                Image(systemName: model.wearScarf ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(model.wearScarf ? pstyle.accentColor.color : ink.ink3)
+                Text("Scarf in the album's colour").foregroundStyle(ink.ink)
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .padding(.horizontal, 10).padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 10).fill(ink.dark ? Color.white.opacity(0.06) : Color.black.opacity(0.05)))
+            .contentShape(Rectangle())
+            .onTapGesture { model.toggleScarf() }
 
         }
     }

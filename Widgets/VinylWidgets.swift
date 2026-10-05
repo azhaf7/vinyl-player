@@ -134,7 +134,7 @@ private struct WidgetRecord: View {
 
     var body: some View {
         MiniRecord(diameter: diameter, style: VinylStyle.resolve(snap.vinylIndex, custom: snap.style?.vinyl), art: SharedStore.coverImage(item.coverFile),
-                   artIndex: item.index, artInset: artInset, ringWidth: 3, spindle: 6, sheen: false,
+                   artIndex: item.index, artInset: artInset, ringWidth: 2, spindle: 6, sheen: false,
                    ring: snap.style?.labelRing ?? Tokens.labelRing)
             .rotationEffect(.degrees(Double(item.index) * 37))
             .overlay(RecordSheen())
@@ -233,7 +233,7 @@ private struct SmallView: View {
         Fit(ref: CGSize(width: 170, height: 170)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 118, artInset: 24)
+                    WidgetRecord(snap: s, item: s.current, diameter: 118, artInset: 9)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 12, y: 12)
@@ -243,7 +243,7 @@ private struct SmallView: View {
                     .fill(RadialGradient(colors: [Color(hex: "#4a4a50"), Color(hex: "#222226")], center: UnitPoint(x: 0.38, y: 0.32), startRadius: 0, endRadius: 8))
                     .frame(width: 16, height: 16)
                     .offset(x: 142, y: 16)
-                WidgetArm(length: 84, head: CGSize(width: 7, height: 12), gimbal: 8, deg: s.isPlaying ? 30 : 8)
+                WidgetArm(length: 84, head: CGSize(width: 7, height: 12), gimbal: 8, deg: s.isPlaying ? 22 : 6)
                     .offset(x: 150 - 20, y: 24)
                     .animation(.spring(duration: 0.7, bounce: 0.3), value: s.isPlaying)
                 VStack(alignment: .leading, spacing: 1) {
@@ -271,7 +271,7 @@ private struct MediumView: View {
         Fit(ref: CGSize(width: 364, height: 170)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 138, artInset: 28)
+                    WidgetRecord(snap: s, item: s.current, diameter: 138, artInset: 10)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 16, y: 16)
@@ -309,7 +309,7 @@ private struct LargeView: View {
         Fit(ref: CGSize(width: 364, height: 382)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 190, artInset: 40)
+                    WidgetRecord(snap: s, item: s.current, diameter: 190, artInset: 13)
                 }
                 .buttonStyle(.plain)
                 .offset(x: 84, y: 10)
@@ -369,7 +369,7 @@ private struct LargeView: View {
                         ForEach(s.upNext, id: \.index) { u in
                             HStack(spacing: 8) {
                                 MiniRecord(diameter: 40, style: VinylStyle.resolve(s.vinylIndex, custom: s.style?.vinyl), art: SharedStore.coverImage(u.coverFile),
-                                           artIndex: u.index, artInset: 8, sheen: false)
+                                           artIndex: u.index, artInset: 4, sheen: false)
                                 Text(u.title)
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(look.ink2)

@@ -47,6 +47,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject, UNUs
         // Accounts and in-app sharing.
         let social = SocialService.shared
         social.onNewShares = { [weak self] shares in self?.announce(shares) }
+        social.nowPlayingProvider = { [weak self] in
+            guard let m = self?.model else { return (nil, false) }
+            return (m.isLive && m.track.sourceID == nil ? nil : m.track, m.pendingPlaying)
+        }
+        PlaylistPlayer.shared.model = model
+        HotKeys.shared.onPress = { [weak self] id in
+            guard let m = self?.model else { return }
+            switch id {
+            case 1: m.toggle()
+            case 2: PlaylistPlayer.shared.playlist != nil && !m.isLive ? PlaylistPlayer.shared.skip() : m.next()
+            case 3: m.previous()
+            case 4: CollectionStore.shared.toggleLike(m.track)
+            default: break
+            }
+        }
+        prefs.$hotKeys.removeDuplicates().sink { on in DispatchQueue.main.async { HotKeys.shared.setEnabled(on) } }.store(in: &bag)
         social.$state.sink { state in
             if case .signedIn = state {
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
@@ -82,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject, UNUs
 
     /// A friend sent records: the pet hops, and a notification opens the inbox.
     private func announce(_ shares: [Share]) {
-        model.petTapped()
+        model.wave()
         for s in shares.prefix(3) {
             let content = UNMutableNotificationContent()
             content.title = (s.sender.map { $0.name } ?? "A friend") + " sent you a record"
@@ -135,6 +151,7 @@ private struct MenuContent: View {
         Button(model.pendingPlaying ? "Pause" : "Play") { model.toggle() }
         Button("Next") { model.next() }
         Button("Previous") { model.previous() }
+        Button(CollectionStore.shared.isLiked(model.track) ? "Unlike Song" : "Like Song") { CollectionStore.shared.toggleLike(model.track) }
         Divider()
         Button(social.unopenedCount > 0 ? "Library — \(social.unopenedCount) new record\(social.unopenedCount == 1 ? "" : "s")…" : "Library…") {
             LibraryWindowController.shared.show(social.unopenedCount > 0 ? .inbox : nil)

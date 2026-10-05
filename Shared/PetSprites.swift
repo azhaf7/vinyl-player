@@ -70,6 +70,8 @@ struct PetPose: Hashable {
     var legs: PetLegs = .stand
     var headphones = false
     var sunglasses = false
+    /// A little scarf in the album's colour.
+    var scarf: RGB? = nil
 }
 
 /// Builds (and caches) one sprite frame as a 1-pixel-per-cell CGImage. Scale it with `.interpolation(.none)`.
@@ -79,11 +81,12 @@ final class PetSpriteCache {
     private let lock = NSLock()
 
     func image(pet: Int, pose: PetPose, body: RGB? = nil) -> CGImage? {
-        let key = "\(pet)|\(pose.arms.rawValue)|\(pose.eyes.rawValue)|\(pose.legs.rawValue)|\(pose.headphones)|\(pose.sunglasses)|\(body?.hex ?? "")"
+        let key = "\(pet)|\(pose.arms.rawValue)|\(pose.eyes.rawValue)|\(pose.legs.rawValue)|\(pose.headphones)|\(pose.sunglasses)|\(pose.scarf?.hex ?? "")|\(body?.hex ?? "")"
         lock.lock(); defer { lock.unlock() }
         if let img = cache[key] { return img }
         var palette = PetSpec.at(pet).palette
         if let body { palette["o"] = body; palette["d"] = body.darker(0.28) }
+        if let scarf = pose.scarf { palette["f"] = scarf; palette["F"] = scarf.darker(0.3) }
         let img = Self.render(grid: Self.grid(pet: pet, pose: pose), palette: palette)
         cache[key] = img
         return img
@@ -143,6 +146,11 @@ final class PetSpriteCache {
             for c in [3, 4, 5, 6, 9, 10, 11, 12] { set(R(5), c, "g"); set(R(6), c, "g") }
             set(R(5), 7, "g"); set(R(5), 8, "g")
             set(R(5), 4, "s"); set(R(5), 10, "s")
+        }
+        if pose.scarf != nil {
+            // Neck row (just under the chin), with a knot and a tail on the right.
+            for c in 3...12 where g[R(10)][c] != "." { set(R(10), c, "f") }
+            set(R(10), 11, "F"); set(R(11), 11, "f"); set(R(11), 12, "F")
         }
         switch pose.legs {
         case .a: g[last - 1] = Array(".koook....koook."); g[last] = Array(".kkkkk....kkkkk.")

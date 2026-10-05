@@ -9,10 +9,12 @@ struct HistoryEntry: Codable, Identifiable, Hashable {
     var spotifyID: String?
     var source: String
     var playedAt: Date
+    var duration: Double? = nil
+    var album: String? = nil
 
     var track: Track {
-        Track(title: title, artist: artist, duration: 240, bpm: 100, tintHex: "#8a6a4a",
-              artworkURL: artworkURL, sourceID: spotifyID.map { "spotify:track:" + $0 })
+        Track(title: title, artist: artist, duration: duration ?? 240, bpm: 100, tintHex: "#8a6a4a",
+              artworkURL: artworkURL, sourceID: spotifyID.map { "spotify:track:" + $0 }, album: album)
     }
 }
 
@@ -37,12 +39,16 @@ final class HistoryStore: ObservableObject {
     }
 
     /// Called when the motor starts on a song. Replaying the same song within 10 minutes isn't a new entry.
-    func record(_ track: Track, source: String) {
+    static func entry(for track: Track, source: String) -> HistoryEntry {
         let spotify = track.sourceID.flatMap { $0.hasPrefix("spotify:track:") ? String($0.dropFirst("spotify:track:".count)) : nil }
+        return HistoryEntry(title: track.title, artist: track.artist, artworkURL: track.artworkURL,
+                            spotifyID: spotify, source: source, playedAt: Date(), duration: track.duration, album: track.album)
+    }
+
+    func record(_ track: Track, source: String) {
         if let last = entries.first, last.title == track.title, last.artist == track.artist,
            Date().timeIntervalSince(last.playedAt) < 600 { return }
-        entries.insert(HistoryEntry(title: track.title, artist: track.artist, artworkURL: track.artworkURL,
-                                    spotifyID: spotify, source: source, playedAt: Date()), at: 0)
+        entries.insert(Self.entry(for: track, source: source), at: 0)
         if entries.count > limit { entries.removeLast(entries.count - limit) }
         save()
     }
@@ -71,6 +77,12 @@ final class HistoryStore: ObservableObject {
             counts[key] = (counts[key]?.0 ?? e, (counts[key]?.1 ?? 0) + 1)
         }
         return counts.values.sorted { $0.1 > $1.1 }.prefix(20).map { TopSong(entry: $0.0, plays: $0.1) }
+    }
+
+    /// Plays in the last 7 days, for the weekly recap.
+    var thisWeek: [HistoryEntry] {
+        let since = Date().addingTimeInterval(-7 * 24 * 3600)
+        return entries.filter { $0.playedAt >= since }
     }
 
     private func save() {

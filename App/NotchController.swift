@@ -183,7 +183,7 @@ private struct NotchRecord: View {
 
     var body: some View {
         MiniRecord(diameter: size, style: VinylStyle.resolve(model.vinyl, custom: style.vinyl), art: art, artIndex: model.index,
-                   artInset: size * 0.14, spindle: 2, sheen: false)
+                   artInset: size * 0.08, spindle: 2, sheen: false)
             .rotationEffect(.degrees(model.discAngle))
             .overlay(RecordSheen())
     }
@@ -217,7 +217,7 @@ private struct NotchDetails: View {
         HStack(spacing: 16) {
             // The record itself, big, with the album art on its label, spinning with the turntable.
             MiniRecord(diameter: 116, style: VinylStyle.resolve(model.vinyl, custom: style.vinyl), art: art, artIndex: model.index,
-                       artInset: 14, ringWidth: 2.5, spindle: 5, sheen: false, ring: style.labelRing)
+                       artInset: 8, ringWidth: 2, spindle: 5, sheen: false, ring: style.labelRing)
                 .rotationEffect(.degrees(model.discAngle))
                 .overlay(RecordSheen())
                 .shadow(color: tint.opacity(0.35).color, radius: 14)
@@ -255,6 +255,8 @@ private struct NotchDetails: View {
                     }
                     .buttonStyle(PressStyle())
                     IconButton(symbol: "forward.end.fill", size: 30, ink: ink) { model.next() }
+                    LikeButton(track: model.track, size: 14, tint: style.accentColor.color)
+                        .padding(.leading, 6)
                     Spacer()
                     IconButton(symbol: "gearshape.fill", size: 28, ink: ink) { LibraryWindowController.shared.show(.settings) }
                         .help("Settings")

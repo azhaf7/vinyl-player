@@ -192,9 +192,9 @@ private struct SpinningSurface: View {
             if let img = DiscImage.make(style: style, diameter: 248, detailed: true, ring: ring) {
                 Image(decorative: img, scale: 2).resizable()
             }
-            // Label: album art inset 36 (Ø176) with a slight bevel: the cover fills most of the record.
+            // The album art fills nearly the whole record (Ø212), leaving a thin ring of grooves.
             CoverArt(image: art, index: artIndex)
-                .frame(width: 176, height: 176)
+                .frame(width: 212, height: 212)
                 .clipShape(Circle())
                 .overlay(
                     ZStack {

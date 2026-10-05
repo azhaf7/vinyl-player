@@ -2,12 +2,17 @@ import SwiftUI
 import AppKit
 
 enum LibrarySection: String, CaseIterable, Identifiable {
-    case inbox = "Inbox", history = "History", friends = "Friends", account = "Account", settings = "Settings"
+    case inbox = "Inbox", history = "History", liked = "Liked", playlists = "Playlists", crate = "Crate", recap = "Weekly Recap",
+         friends = "Friends", account = "Account", settings = "Settings"
     var id: String { rawValue }
     var symbol: String {
         switch self {
         case .inbox: return "tray.and.arrow.down"
         case .history: return "clock.arrow.circlepath"
+        case .liked: return "heart"
+        case .playlists: return "music.note.list"
+        case .crate: return "square.stack"
+        case .recap: return "chart.bar"
         case .friends: return "person.2"
         case .account: return "person.crop.circle"
         case .settings: return "gearshape"
@@ -70,6 +75,10 @@ struct LibraryView: View {
                 switch nav.section ?? .inbox {
                 case .inbox: InboxView(model: model, nav: nav)
                 case .history: HistoryView(model: model)
+                case .liked: LikedView(model: model)
+                case .playlists: PlaylistsView(model: model)
+                case .crate: CrateDigView(model: model)
+                case .recap: RecapView(model: model)
                 case .friends: FriendsView(model: model)
                 case .account: AccountView(model: model)
                 case .settings: SettingsForm(model: model).frame(maxWidth: 620)
@@ -347,41 +356,15 @@ private struct HistoryView: View {
                                        description: Text("Songs you play on the turntable show up here."))
             } else if tab == 0 {
                 List(history.entries) { e in
-                    HistoryRow(entry: e, detail: relative(e.playedAt), model: model)
+                    SongRow(entry: e, detail: relative(e.playedAt), model: model)
                         .contextMenu { Button("Remove from History", role: .destructive) { history.remove(e) } }
                 }
             } else {
                 List(history.topSongs) { item in
-                    HistoryRow(entry: item.entry, detail: "\(item.plays) play" + (item.plays == 1 ? "" : "s"), model: model)
+                    SongRow(entry: item.entry, detail: "\(item.plays) play" + (item.plays == 1 ? "" : "s"), model: model)
                 }
             }
         }
-    }
-}
-
-private struct HistoryRow: View {
-    let entry: HistoryEntry
-    let detail: String
-    let model: PlayerModel
-
-    var body: some View {
-        HStack(spacing: 12) {
-            TrackArt(track: entry.track, size: 44)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.title).font(.headline)
-                Text(entry.artist).foregroundStyle(.secondary)
-            }
-            .lineLimit(1)
-            Spacer()
-            Text(detail).font(.caption).foregroundStyle(.secondary)
-            Button { Spotify.play(id: entry.spotifyID, title: entry.title, artist: entry.artist) } label: {
-                Image(systemName: "play.fill")
-            }
-            .buttonStyle(.borderless)
-            .help("Play in Spotify")
-            SendMenu(track: entry.track, model: model)
-        }
-        .padding(.vertical, 3)
     }
 }
 
@@ -435,11 +418,22 @@ private struct FriendsView: View {
                         HStack(spacing: 12) {
                             PetSprite(pet: PetSpec.all.firstIndex(where: { $0.name == f.pet }) ?? 0, pose: PetPose(), pixel: 2)
                                 .frame(width: 32)
-                            VStack(alignment: .leading) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text(f.name).font(.headline)
-                                Text("@" + f.username).foregroundStyle(.secondary)
+                                if f.isListening, let t = f.nowTrack {
+                                    HStack(spacing: 6) {
+                                        MiniRecord(diameter: 16, style: VinylStyle.at(0), art: ArtworkService.shared.image(for: t), artIndex: 0, artInset: 3, sheen: false)
+                                        Text("Spinning " + t.title + " — " + t.artist).foregroundStyle(.secondary)
+                                    }
+                                    .lineLimit(1)
+                                } else {
+                                    Text("@" + f.username).foregroundStyle(.secondary)
+                                }
                             }
                             Spacer()
+                            if f.isListening, let t = f.nowTrack {
+                                Button("Listen along") { Spotify.play(id: f.nowSpotifyId, title: t.title, artist: t.artist) }
+                            }
                             Button("Send “\(model.track.title)”") {
                                 social.send(model.track, to: f, message: "", pet: PetSpec.at(model.pet).name) { err in
                                     note = err ?? "Sent “\(model.track.title)” to @\(f.username)."
