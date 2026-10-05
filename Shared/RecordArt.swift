@@ -43,7 +43,7 @@ enum DiscImage {
 
         if detailed {
             let k = diameter / 248 // the design's measurements are for the 248 pt deck record
-            func ring(_ inset: CGFloat, dark: Double, lightWidth: CGFloat, light: Double) {
+            func grooveBand(_ inset: CGFloat, dark: Double, lightWidth: CGFloat, light: Double) {
                 let rr = R - inset * k
                 if light > 0 {
                     ctx.setStrokeColor(RGB.whiteAlpha(light).cgColor); ctx.setLineWidth(lightWidth * 2)
@@ -54,7 +54,7 @@ enum DiscImage {
                     ctx.strokeEllipse(in: disc(rr))
                 }
             }
-            ring(4, dark: 0, lightWidth: 1, light: 0.03)
+            grooveBand(4, dark: 0, lightWidth: 1, light: 0.03)
             ctx.setFillColor(ring.cgColor); ctx.fillEllipse(in: disc(R - 15 * k))
             ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(1); ctx.strokeEllipse(in: disc(R - 15 * k + 0.5))
             ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(R - 17 * k))

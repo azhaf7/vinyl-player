@@ -17,6 +17,20 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Type-check (every error, both targets)
+        run: |
+          SDK=$(xcrun --show-sdk-path --sdk macosx)
+          check() { # name, files...
+            name=$1; shift
+            xcrun swiftc -typecheck -parse-as-library -sdk "$SDK" -target arm64-apple-macos14.0 "$@" > "tc-$name.log" 2>&1 || true
+            grep -E "error:" "tc-$name.log" | sed "s#$GITHUB_WORKSPACE/##" | sort -u | head -60 | while IFS= read -r line; do echo "::error::[$name] $line"; done
+            ! grep -q "error:" "tc-$name.log"
+          }
+          ok=0
+          check app $(find App Shared -name '*.swift') || ok=1
+          check widgets $(find Widgets Shared -name '*.swift') || ok=1
+          exit $ok
+
       - name: Build
         run: |
           set +e
