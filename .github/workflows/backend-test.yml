@@ -60,7 +60,9 @@ jobs:
 
           r=$(api GET "/rest/v1/shares?recipient_id=eq.$IB&select=title,sender:profiles!shares_sender_id_fkey(username)" "$TB")
           [ "$(body "$r" | jq -r '.[0].sender.username')" = "citest_${N}a" ] || fail "B's inbox: $r"
-          r=$(api GET "/rest/v1/shares?id=eq.$SID" "$KEY"); [ "$(body "$r" | jq length 2>/dev/null || echo 0)" = 0 ] || fail "Signed-out read of a record: $r"
+          # Signed out: either refused outright or an empty answer; never the record.
+          r=$(api GET "/rest/v1/shares?id=eq.$SID" "$KEY")
+          if [ "$(code "$r")" = 200 ]; then [ "$(body "$r" | jq length)" = 0 ] || fail "Signed-out read of a record: $r"; fi
           echo "✓ record arrives in the inbox; not readable when signed out"
 
           r=$(api PATCH "/rest/v1/shares?id=eq.$SID" "$TB" '{"opened_at":"2026-01-01T00:00:00Z"}'); [ "$(code "$r")" = 200 ] || fail "Open record: $r"

@@ -13,6 +13,7 @@ final class ArtworkService: ObservableObject {
         var file: String?
         var tint: String?
         var album: String?
+        var url: String?
         var customFile: String?
         var customTint: String?
     }
@@ -53,6 +54,13 @@ final class ArtworkService: ObservableObject {
     func coverFile(for track: Track) -> String? {
         let e = index[track.key]
         return e?.customFile ?? e?.file
+    }
+
+    /// A public web address for the cover (for share links): the music app's own, or the iTunes one.
+    func remoteURL(for track: Track) -> String? {
+        let candidate = track.artworkURL ?? index[track.key]?.url
+        guard let c = candidate, c.hasPrefix("https://") else { return nil }
+        return c
     }
 
     func hasCustomCover(_ track: Track) -> Bool { index[track.key]?.customFile != nil }
@@ -126,7 +134,7 @@ final class ArtworkService: ObservableObject {
                 let file = Self.fileName(key) + ".jpg"
                 try? jpeg.write(to: SharedStore.coversURL.appendingPathComponent(file))
                 var e = self.index[key] ?? Entry()
-                e.file = file; e.tint = tint.hex; e.album = album
+                e.file = file; e.tint = tint.hex; e.album = album; e.url = url.absoluteString
                 self.index[key] = e
                 self.images[key] = nil
                 self.save()

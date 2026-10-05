@@ -548,6 +548,8 @@ final class PlayerModel {
         }
         let from = prefs.senderName.trimmingCharacters(in: .whitespaces).isEmpty ? "A friend" : prefs.senderName
         var fields = [("song", track.title), ("by", track.artist), ("from", from), ("pet", PetSpec.at(pet).name)]
+        // The exact cover, so the friend sees the right artwork without a search.
+        if let art = ArtworkService.shared.remoteURL(for: track) { fields.append(("art", art)) }
         // From Spotify: link the exact track, not a search.
         if let id = track.sourceID, id.hasPrefix("spotify:track:") {
             fields.append(("spotify", String(id.dropFirst("spotify:track:".count))))

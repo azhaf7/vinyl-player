@@ -37,11 +37,11 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (VinylEntry) -> Void) {
-        completion(entry(at: Date(), SharedStore.readSnapshot() ?? .placeholder))
+        completion(entry(at: Date(), SharedStore.readSnapshot() ?? (context.isPreview ? .placeholder : .notConnected)))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<VinylEntry>) -> Void) {
-        let now = Date(), s = SharedStore.readSnapshot() ?? .placeholder
+        let now = Date(), s = SharedStore.readSnapshot() ?? .notConnected
         var entries = [entry(at: now, s)]
         if !s.isPlaying, let since = s.pausedSince, since.addingTimeInterval(Self.sleepAfter) > now {
             entries.append(VinylEntry(date: since.addingTimeInterval(Self.sleepAfter), snap: s, asleep: true))

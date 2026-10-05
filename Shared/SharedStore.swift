@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import Security
 
 /// What the widgets show. The app writes it on every state change (throttled); widgets only read it.
 struct WidgetSnapshot: Codable, Equatable {
@@ -29,7 +30,14 @@ struct WidgetSnapshot: Codable, Equatable {
 
     var tint: RGB { RGB(hex: tintHex) }
 
-    /// Shown before the app has ever run.
+    /// Shown when the widget can't see the app (not opened yet, or a build the widget can't share with).
+    static var notConnected: WidgetSnapshot {
+        let item = Item(title: "Open Vinyl Player", artist: "to start the turntable", index: 0, coverFile: nil)
+        return WidgetSnapshot(current: item, upNext: [], tintHex: "#8a6a4a", isPlaying: false, elapsed: 0, duration: 240,
+                              side: "A", petIndex: 0, vinylIndex: 0, headphones: false, updated: Date(), pausedSince: nil, live: true)
+    }
+
+    /// Sample content for the widget gallery preview.
     static var placeholder: WidgetSnapshot {
         let items = Catalog.tracks.enumerated().map { Item(title: $1.title, artist: $1.artist, index: $0, coverFile: nil) }
         return WidgetSnapshot(current: items[0], upNext: Array(items[1...3]), tintHex: Catalog.tracks[0].tintHex,
@@ -53,9 +61,16 @@ enum SharedStore {
     static let widgetKind = "VinylWidget"
     static let commandNotification = "com.azhaf7.vinylplayer.command"
 
-    /// `$(TeamIdentifierPrefix)vinylplayer`, expanded at build time into both Info.plists.
+    /// The App Group this build is actually signed with ("TEAMID.vinylplayer"), read from the code
+    /// signature so the app and the widgets always agree. Unsigned builds have no team prefix; the group
+    /// is skipped then, so macOS doesn't ask for access.
     static let groupID: String? = {
-        // Unsigned builds have no team prefix ("TEAMID."); skip the group then, so macOS doesn't ask for access.
+        if let task = SecTaskCreateFromSelf(nil),
+           let value = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil),
+           let groups = value as? [String],
+           let id = groups.first(where: { $0.hasSuffix("vinylplayer") && $0.contains(".") }) {
+            return id
+        }
         guard let id = Bundle.main.object(forInfoDictionaryKey: "VinylAppGroup") as? String,
               !id.contains("$("), id.contains(".") else { return nil }
         return id

@@ -35,6 +35,7 @@ struct SharedRecord: Codable, Hashable {
         from = value("from") ?? "A friend"
         pet = value("pet") ?? ""
         if let sp = value("spotify"), sp.count == 22, sp.allSatisfy({ $0.isLetter || $0.isNumber }) { spotifyID = sp }
+        if let art = value("art"), art.hasPrefix("https://") { artworkURL = art }
     }
 
     var track: Track {

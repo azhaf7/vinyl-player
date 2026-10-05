@@ -31,8 +31,9 @@ struct PreviousTrackIntent: AppIntent {
 enum WidgetActions {
     static func run(_ cmd: WidgetCommand) {
         let running = SharedStore.hostIsRunning
-        if running { SharedStore.enqueue(cmd) }
-        var s = SharedStore.readSnapshot() ?? .placeholder
+        // Without the app there's no music to control; don't pretend with sample songs.
+        guard running, var s = SharedStore.readSnapshot() else { return }
+        SharedStore.enqueue(cmd)
         let now = Date()
         switch cmd {
         case .playPause:

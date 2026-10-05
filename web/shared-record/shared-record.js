@@ -14,12 +14,19 @@
   const page = $('page'), stage = $('stage'), record = $('record');
 
   // ---- Link parameters ----
+  // Only covers from Spotify's or Apple's image servers are shown.
+  function artOK(u) {
+    try { const h = new URL(u); return h.protocol === 'https:' && /(^|\.)(scdn\.co|mzstatic\.com|spotifycdn\.com)$/.test(h.hostname); }
+    catch (e) { return false; }
+  }
+
   function params() {
     const h = new URLSearchParams(location.hash.slice(1)), q = new URLSearchParams(location.search);
     const g = (k) => (h.get(k) || q.get(k) || '').trim();
     const sp = g('spotify');
     return { title: g('song') || 'Get Lucky', artist: g('by') || 'Daft Punk', from: g('from') || 'A friend', pet: g('pet'),
-             spotify: /^[A-Za-z0-9]{22}$/.test(sp) ? sp : '' };
+             spotify: /^[A-Za-z0-9]{22}$/.test(sp) ? sp : '',
+             art: artOK(g('art')) ? g('art') : '' };
   }
 
   // ---- Artwork (iTunes Search API, cached in localStorage) ----
@@ -87,6 +94,13 @@
   }
 
   function loadArtwork(t) {
+    if (t.art) {
+      // The link carries the exact cover: show it, then measure its colour.
+      const entry = { url: t.art, tint: null };
+      applyArt(entry);
+      measureTint(keyOf(t), entry);
+      return;
+    }
     const k = keyOf(t), cached = readCache()[k];
     if (cached) {
       applyArt(cached);
@@ -159,7 +173,7 @@
     const q = encodeURIComponent(p.title + ' ' + p.artist);
     $('spotifyLink').href = p.spotify ? 'https://open.spotify.com/track/' + p.spotify : 'https://open.spotify.com/search/' + q;
     $('appleLink').href = 'https://music.apple.com/search?term=' + q;
-    const app = [['song', p.title], ['by', p.artist], ['from', p.from], ['pet', p.pet], ['spotify', p.spotify]]
+    const app = [['song', p.title], ['by', p.artist], ['from', p.from], ['pet', p.pet], ['spotify', p.spotify], ['art', p.art]]
       .filter(([, v]) => v).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
     $('appLink').href = 'vinyl://record?' + app;
     document.title = opened ? p.title + ' · ' + p.artist : fromLine;
