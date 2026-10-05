@@ -38,11 +38,12 @@ struct DeckView: View {
 // MARK: - Static parts
 
 private struct DeckBase: View {
+    @Environment(\.playerStyle) private var pstyle
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Plinth top
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(LinearGradient(colors: [Tokens.sandTop.color, Tokens.sandBottom.color], startPoint: .top, endPoint: .bottom))
+                .fill(LinearGradient(colors: [pstyle.deckTop.color, pstyle.deckBottom.color], startPoint: .top, endPoint: .bottom))
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.35), location: 0), .init(color: .clear, location: 0.08),
@@ -55,7 +56,7 @@ private struct DeckBase: View {
 
             // Plinth front face, folded down from the front edge.
             Rectangle()
-                .fill(LinearGradient(colors: [Tokens.plinthFrontTop.color, Tokens.plinthFrontBottom.color], startPoint: .top, endPoint: .bottom))
+                .fill(LinearGradient(colors: [pstyle.deckFrontTop.color, pstyle.deckFrontBottom.color], startPoint: .top, endPoint: .bottom))
                 .frame(width: 264, height: 10)
                 .deckLayer(z: 0, local: Mat4.about(132, 0, Mat4.rotateX(-90) * Mat4.translate(0, 0, -10)) * Mat4.translate(40, 296, 0))
                 .allowsHitTesting(false)
@@ -99,11 +100,12 @@ private struct DeckBase: View {
 }
 
 private struct StatusLED: View {
+    @Environment(\.playerStyle) private var pstyle
     let on: Bool
     var body: some View {
         Circle()
-            .fill(on ? Tokens.accent.color : Color.white.opacity(0.14))
-            .shadow(color: on ? Tokens.accent.opacity(0.8).color : .clear, radius: 4)
+            .fill(on ? pstyle.accentColor.color : Color.white.opacity(0.14))
+            .shadow(color: on ? pstyle.accentColor.opacity(0.8).color : .clear, radius: 4)
             .animation(.easeInOut(duration: 0.4), value: on)
             .at(310, 76, 6, 6)
             .allowsHitTesting(false)
@@ -133,11 +135,12 @@ private struct RpmSwitch: View {
 
 /// The record and everything attached to it. Moves as one body for hover, swap (lift and slide away) and flip.
 private struct RecordStack: View {
+    @Environment(\.playerStyle) private var pstyle
     let model: PlayerModel
     let art: NSImage?
 
     var body: some View {
-        let style = VinylStyle.at(model.vinyl)
+        let style = VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl)
         let rec = Mat4.about(154, 148, .rotateY(model.recordFlip)) * Mat4.translate(0, model.recordY, model.recordZ)
         let local: (Double) -> Mat4 = { z in Mat4.translate(0, 0, z) * rec }
 
@@ -152,7 +155,7 @@ private struct RecordStack: View {
                     .allowsHitTesting(false)
             }
             // Spinning surface: grooves, label art, spindle hole.
-            SpinningSurface(style: style, art: art, artIndex: model.index, angle: model.discAngle)
+            SpinningSurface(style: style, ring: pstyle.labelRing, art: art, artIndex: model.index, angle: model.discAngle)
                 .at(30, 24, 248, 248)
                 .deckLayer(z: 0, local: local(0))
                 .allowsHitTesting(false)
@@ -179,18 +182,19 @@ private struct RecordStack: View {
 
 private struct SpinningSurface: View {
     let style: VinylStyle
+    let ring: RGB
     let art: NSImage?
     let artIndex: Int
     let angle: Double
 
     var body: some View {
         ZStack {
-            if let img = DiscImage.make(style: style, diameter: 248, detailed: true) {
+            if let img = DiscImage.make(style: style, diameter: 248, detailed: true, ring: ring) {
                 Image(decorative: img, scale: 2).resizable()
             }
-            // Label: album art inset 50 (Ø148) with a slight bevel.
+            // Label: album art inset 36 (Ø176) with a slight bevel: the cover fills most of the record.
             CoverArt(image: art, index: artIndex)
-                .frame(width: 148, height: 148)
+                .frame(width: 176, height: 176)
                 .clipShape(Circle())
                 .overlay(
                     ZStack {

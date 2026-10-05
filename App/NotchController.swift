@@ -9,7 +9,7 @@ final class NotchState: ObservableObject {
     @Published var hasNotch = false
 
     static let wing: CGFloat = 44
-    static let expandedExtra: CGFloat = 136
+    static let expandedExtra: CGFloat = 144
     static let expandedMinWidth: CGFloat = 440
 
     var collapsedSize: CGSize { CGSize(width: notchWidth + 2 * Self.wing, height: notchHeight) }
@@ -133,6 +133,7 @@ struct NotchView: View {
     let model: PlayerModel
     @ObservedObject var state: NotchState
     @ObservedObject private var artwork = ArtworkService.shared
+    @ObservedObject private var prefs = Preferences.shared
 
     var body: some View {
         let _ = artwork.revision
@@ -170,23 +171,26 @@ struct NotchView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.spring(response: 0.38, dampingFraction: 0.82), value: state.expanded)
         .environment(\.colorScheme, .dark)
+        .environment(\.playerStyle, prefs.style)
     }
 }
 
 private struct NotchRecord: View {
+    @Environment(\.playerStyle) private var style
     let model: PlayerModel
     let art: NSImage?
     let size: CGFloat
 
     var body: some View {
-        MiniRecord(diameter: size, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index,
-                   artInset: size * 0.2, spindle: 2, sheen: false)
+        MiniRecord(diameter: size, style: VinylStyle.resolve(model.vinyl, custom: style.vinyl), art: art, artIndex: model.index,
+                   artInset: size * 0.14, spindle: 2, sheen: false)
             .rotationEffect(.degrees(model.discAngle))
             .overlay(RecordSheen())
     }
 }
 
 private struct NotchPet: View {
+    @Environment(\.playerStyle) private var style
     let model: PlayerModel
     let maxHeight: CGFloat
 
@@ -194,7 +198,7 @@ private struct NotchPet: View {
         let r = model.petRender
         let rows = CGFloat(PetSpriteCache.rows(pet: model.pet))
         let pixel = max(1, min(1.5, maxHeight / rows))
-        PetSprite(pet: model.pet, pose: r.pose, pixel: pixel)
+        PetSprite(pet: model.pet, pose: r.pose, pixel: pixel, tint: style.pet)
             .scaleEffect(x: r.sx, y: r.sy, anchor: .bottom)
             .rotationEffect(.degrees(r.tilt), anchor: .bottom)
             .offset(x: r.sway * 0.4, y: -min(4, r.lift * 0.4))
@@ -203,6 +207,7 @@ private struct NotchPet: View {
 }
 
 private struct NotchDetails: View {
+    @Environment(\.playerStyle) private var style
     let model: PlayerModel
     let art: NSImage?
     let tint: RGB
@@ -211,11 +216,12 @@ private struct NotchDetails: View {
         let ink = Ink(dark: true)
         HStack(spacing: 16) {
             // The record itself, big, with the album art on its label, spinning with the turntable.
-            MiniRecord(diameter: 104, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index,
-                       artInset: 22, ringWidth: 3, spindle: 5, sheen: false)
+            MiniRecord(diameter: 116, style: VinylStyle.resolve(model.vinyl, custom: style.vinyl), art: art, artIndex: model.index,
+                       artInset: 14, ringWidth: 2.5, spindle: 5, sheen: false, ring: style.labelRing)
                 .rotationEffect(.degrees(model.discAngle))
                 .overlay(RecordSheen())
                 .shadow(color: tint.opacity(0.35).color, radius: 14)
+                .frame(width: 116, height: 116)
             VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.track.title)

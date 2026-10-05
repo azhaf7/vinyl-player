@@ -133,8 +133,9 @@ private struct WidgetRecord: View {
     let artInset: CGFloat
 
     var body: some View {
-        MiniRecord(diameter: diameter, style: VinylStyle.at(snap.vinylIndex), art: SharedStore.coverImage(item.coverFile),
-                   artIndex: item.index, artInset: artInset, ringWidth: 3, spindle: 6, sheen: false)
+        MiniRecord(diameter: diameter, style: VinylStyle.resolve(snap.vinylIndex, custom: snap.style?.vinyl), art: SharedStore.coverImage(item.coverFile),
+                   artIndex: item.index, artInset: artInset, ringWidth: 3, spindle: 6, sheen: false,
+                   ring: snap.style?.labelRing ?? Tokens.labelRing)
             .rotationEffect(.degrees(Double(item.index) * 37))
             .overlay(RecordSheen())
             .shadow(color: .black.opacity(0.5), radius: 9, x: 6, y: 8)
@@ -252,7 +253,7 @@ private struct SmallView: View {
                 .lineLimit(1)
                 .frame(width: 170 - 14 - 52, alignment: .leading)
                 .offset(x: 14, y: 170 - 12 - 30)
-                PetSprite(pet: s.petIndex, pose: petPose(entry), pixel: 2)
+                PetSprite(pet: s.petIndex, pose: petPose(entry), pixel: 2, tint: s.style?.pet)
                     .frame(width: 32, height: 36, alignment: .bottom)
                     .offset(x: 170 - 12 - 32, y: 170 - 12 - 36)
             }
@@ -273,11 +274,9 @@ private struct MediumView: View {
                     WidgetRecord(snap: s, item: s.current, diameter: 138, artInset: 28)
                 }
                 .buttonStyle(.plain)
-                .offset(x: 76, y: 16)
+                .offset(x: 16, y: 16)
                 .id(s.current.index)
-                .transition(.asymmetric(insertion: .offset(x: -62).combined(with: .opacity), removal: .offset(x: -62).combined(with: .opacity)))
-                Sleeve(size: 138, art: SharedStore.coverImage(s.current.coverFile), artIndex: s.current.index)
-                    .offset(x: 16, y: 16)
+                .transition(.asymmetric(insertion: .scale(scale: 0.6).combined(with: .opacity), removal: .move(edge: .top).combined(with: .opacity)))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(statusLine(s).uppercased())
                         .font(.system(size: 10, weight: .semibold)).tracking(0.6)
@@ -291,10 +290,10 @@ private struct MediumView: View {
                         .foregroundStyle(look.ink2)
                         .lineLimit(1)
                 }
-                .frame(width: 364 - 228 - 14, alignment: .leading)
-                .offset(x: 228, y: 18)
+                .frame(width: 364 - 172 - 14, alignment: .leading)
+                .offset(x: 172, y: 18)
                 Controls(snap: s, look: look, small: 30, big: 38)
-                    .offset(x: 222, y: 170 - 12 - 38)
+                    .offset(x: 166, y: 170 - 12 - 38)
             }
         }
     }
@@ -310,23 +309,21 @@ private struct LargeView: View {
         Fit(ref: CGSize(width: 364, height: 382)) {
             ZStack(alignment: .topLeading) {
                 Button(intent: PlayPauseIntent()) {
-                    WidgetRecord(snap: s, item: s.current, diameter: 172, artInset: 36)
+                    WidgetRecord(snap: s, item: s.current, diameter: 190, artInset: 40)
                 }
                 .buttonStyle(.plain)
-                .offset(x: 112, y: 18)
+                .offset(x: 84, y: 10)
                 .id(s.current.index)
-                .transition(.asymmetric(insertion: .offset(x: -94).combined(with: .opacity), removal: .offset(x: -94).combined(with: .opacity)))
-                Sleeve(size: 172, art: SharedStore.coverImage(s.current.coverFile), artIndex: s.current.index, radius: 7)
-                    .offset(x: 18, y: 18)
+                .transition(.asymmetric(insertion: .scale(scale: 0.6).combined(with: .opacity), removal: .move(edge: .top).combined(with: .opacity)))
                 Circle()
                     .fill(RadialGradient(colors: [Color(hex: "#5a5a60"), Color(hex: "#26262a")], center: UnitPoint(x: 0.38, y: 0.32), startRadius: 0, endRadius: 12))
                     .frame(width: 24, height: 24)
                     .shadow(color: .black.opacity(0.5), radius: 3, y: 2)
                     .offset(x: 322, y: 22)
-                WidgetArm(length: 144, head: CGSize(width: 9, height: 16), gimbal: 12, deg: s.isPlaying ? 30 : 8)
+                WidgetArm(length: 144, head: CGSize(width: 9, height: 16), gimbal: 12, deg: s.isPlaying ? 34 : 8)
                     .offset(x: 334 - 20, y: 34)
                     .animation(.spring(duration: 0.7, bounce: 0.3), value: s.isPlaying)
-                PetSprite(pet: s.petIndex, pose: petPose(entry), pixel: 2)
+                PetSprite(pet: s.petIndex, pose: petPose(entry), pixel: 2, tint: s.style?.pet)
                     .frame(width: 32, height: 36, alignment: .bottom)
                     .offset(x: 312, y: 155)
 
@@ -371,7 +368,7 @@ private struct LargeView: View {
                     HStack(spacing: 10) {
                         ForEach(s.upNext, id: \.index) { u in
                             HStack(spacing: 8) {
-                                MiniRecord(diameter: 40, style: VinylStyle.at(s.vinylIndex), art: SharedStore.coverImage(u.coverFile),
+                                MiniRecord(diameter: 40, style: VinylStyle.resolve(s.vinylIndex, custom: s.style?.vinyl), art: SharedStore.coverImage(u.coverFile),
                                            artIndex: u.index, artInset: 8, sheen: false)
                                 Text(u.title)
                                     .font(.system(size: 11, weight: .semibold))

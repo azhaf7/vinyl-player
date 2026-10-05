@@ -54,6 +54,7 @@ struct PlayerRoot: View {
         .animation(.spring(response: 0.32, dampingFraction: 0.86), value: model.shareOpen)
         .animation(.spring(response: 0.32, dampingFraction: 0.86), value: model.drawer)
         .environment(\.colorScheme, dark ? .dark : .light)
+        .environment(\.playerStyle, prefs.style)
     }
 }
 
@@ -62,10 +63,11 @@ struct PlayerRoot: View {
 struct GlassBackground: View {
     let ink: Ink
     let radius: CGFloat
+    @Environment(\.playerStyle) private var pstyle
     var body: some View {
         ZStack {
             VisualEffectBlur(radius: radius)
-            ink.glass
+            if let card = pstyle.card { card.opacity(ink.dark ? 0.66 : 0.6).color } else { ink.glass }
         }
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color.white.opacity(0.14), lineWidth: 0.5))
@@ -142,19 +144,13 @@ private struct ProgressRow: View {
 }
 
 private struct InfoRow: View {
+    @Environment(\.playerStyle) private var pstyle
     let model: PlayerModel
     let ink: Ink
     let art: NSImage?
 
     var body: some View {
         HStack(spacing: 10) {
-            CoverArt(image: art, index: model.index)
-                .frame(width: 40, height: 40)
-                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5))
-                .shadow(color: .black.opacity(0.4), radius: 4, y: 3)
-                .onTapGesture { ArtworkService.shared.pickCustomCover(for: model.track) }
-                .help("Use your own cover")
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.track.title)
                     .font(.system(size: 13, weight: .semibold)).tracking(-0.13)
@@ -162,7 +158,7 @@ private struct InfoRow: View {
                 if model.needsPermission {
                     Text("Click to allow access to your music app")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Tokens.accent.color)
+                        .foregroundStyle(pstyle.accentColor.color)
                         .onTapGesture { model.service.openPermissionSettings() }
                         .help(model.serviceStatus)
                 } else if model.showsStatus {
@@ -255,6 +251,7 @@ struct PlayButton: View {
 // MARK: - Pet
 
 private struct PetView: View {
+    @Environment(\.playerStyle) private var pstyle
     let model: PlayerModel
 
     var body: some View {
@@ -268,7 +265,7 @@ private struct PetView: View {
                 .scaleEffect(r.shadow)
                 .opacity(r.shadow)
                 .offset(x: 8, y: 57)
-            PetSprite(pet: model.pet, pose: r.pose)
+            PetSprite(pet: model.pet, pose: r.pose, tint: pstyle.pet)
                 .offset(y: 60 - rows * 3 - 1)
                 .frame(width: 48, height: 60, alignment: .topLeading)
                 .scaleEffect(x: r.sx * r.face, y: r.sy, anchor: .bottom)
@@ -285,6 +282,7 @@ private struct PetView: View {
 // MARK: - Panels
 
 private struct SharePanel: View {
+    @Environment(\.playerStyle) private var pstyle
     let model: PlayerModel
     let ink: Ink
     let art: NSImage?
@@ -293,7 +291,7 @@ private struct SharePanel: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 14) {
                 ZStack(alignment: .topLeading) {
-                    MiniRecord(diameter: 72, style: VinylStyle.at(model.vinyl), art: art, artIndex: model.index, artInset: 15)
+                    MiniRecord(diameter: 72, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: art, artIndex: model.index, artInset: 15)
                         .shadow(color: .black.opacity(0.4), radius: 6, x: 4, y: 6)
                         .offset(x: 34, y: 3)
                     CoverArt(image: art, index: model.index)
@@ -349,6 +347,7 @@ private struct SharePanel: View {
 
 /// Send the current song straight to a friend's in-app inbox.
 private struct FriendSendRow: View {
+    @Environment(\.playerStyle) private var pstyle
     let model: PlayerModel
     let ink: Ink
     @ObservedObject private var social = SocialService.shared
@@ -366,7 +365,7 @@ private struct FriendSendRow: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(status ?? "Send to a friend in the app")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(status == nil ? ink.ink3 : Tokens.accent.color)
+                    .foregroundStyle(status == nil ? ink.ink3 : pstyle.accentColor.color)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(social.friends) { f in
@@ -403,6 +402,8 @@ private struct FriendSendRow: View {
 }
 
 private struct CratePanel: View {
+    @Environment(\.playerStyle) private var pstyle
+    @ObservedObject private var prefs = Preferences.shared
     let model: PlayerModel
     let ink: Ink
     @ObservedObject var artwork = ArtworkService.shared
@@ -413,6 +414,7 @@ private struct CratePanel: View {
                 tab(model.isLive ? "Recent" : "Up next", .queue)
                 tab("Records", .records)
                 tab("Pets", .pets)
+                tab("Style", .style)
             }
             .padding(2)
             .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.25)))
@@ -420,6 +422,7 @@ private struct CratePanel: View {
             switch model.drawer {
             case .records?: records
             case .pets?: pets
+            case .style?: styleTab
             default: queue
             }
         }
@@ -440,7 +443,7 @@ private struct CratePanel: View {
     }
 
     private func ring(_ on: Bool) -> some View {
-        Circle().strokeBorder(on ? Tokens.accent.color : Color.white.opacity(0.08), lineWidth: on ? 2 : 1)
+        Circle().strokeBorder(on ? pstyle.accentColor.color : Color.white.opacity(0.08), lineWidth: on ? 2 : 1)
     }
 
     private var queue: some View {
@@ -461,7 +464,7 @@ private struct CratePanel: View {
                     ForEach(Array(order.enumerated()), id: \.element) { n, i in
                         let t = tracks[i]
                         VStack(alignment: .leading, spacing: 6) {
-                            MiniRecord(diameter: 84, style: VinylStyle.at(model.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 17, spindle: 6)
+                            MiniRecord(diameter: 84, style: VinylStyle.resolve(model.vinyl, custom: pstyle.vinyl), art: artwork.image(for: t), artIndex: i, artInset: 17, spindle: 6)
                                 .overlay(ring(n == 0))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(t.title).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
@@ -482,30 +485,103 @@ private struct CratePanel: View {
 
     private var records: some View {
         let art = artwork.image(for: model.track)
+        let custom = VinylStyle.custom(pstyle.vinyl ?? RGB(hex: "#101012"))
         return HStack(spacing: 0) {
-            ForEach(Array(VinylStyle.all.enumerated()), id: \.offset) { i, v in
+            ForEach(Array((VinylStyle.all + [custom]).enumerated()), id: \.offset) { i, v in
                 VStack(spacing: 6) {
-                    MiniRecord(diameter: 54, style: v, art: art, artIndex: model.index, artInset: 11)
+                    MiniRecord(diameter: 46, style: v, art: art, artIndex: model.index, artInset: 9, ring: pstyle.labelRing)
                         .overlay(ring(i == model.vinyl))
-                    Text(v.name).font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink2)
+                        .onTapGesture { model.selectVinyl(i) }
+                    if i == VinylStyle.customIndex {
+                        ColorPicker("", selection: colorBinding(\.vinyl, RGB(hex: "#101012")), supportsOpacity: false)
+                            .labelsHidden()
+                            .controlSize(.mini)
+                    } else {
+                        Text(v.name).font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink2)
+                            .onTapGesture { model.selectVinyl(i) }
+                    }
                 }
                 .modifier(HoverLift())
-                .onTapGesture { model.selectVinyl(i) }
-                if i < VinylStyle.all.count - 1 { Spacer(minLength: 8) }
+                if i < VinylStyle.all.count { Spacer(minLength: 4) }
             }
         }
         .padding(2)
     }
 
+    // MARK: Style
+
+    private func colorBinding(_ key: WritableKeyPath<PlayerStyle, RGB?>, _ fallback: RGB) -> Binding<Color> {
+        Binding(
+            get: { (prefs.style[keyPath: key] ?? fallback).color },
+            set: { c in
+                guard let rgb = RGB(color: c) else { return }
+                prefs.style[keyPath: key] = RGB(rgb.r, rgb.g, rgb.b)
+                if key == \PlayerStyle.vinyl { model.selectVinyl(VinylStyle.customIndex) }
+            })
+    }
+
+    private func colorRow(_ title: String, _ key: WritableKeyPath<PlayerStyle, RGB?>, _ fallback: RGB) -> some View {
+        HStack(spacing: 6) {
+            ColorPicker(selection: colorBinding(key, fallback), supportsOpacity: false) {
+                Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(ink.ink)
+            }
+            if prefs.style[keyPath: key] != nil {
+                Image(systemName: "arrow.uturn.backward.circle.fill")
+                    .foregroundStyle(ink.ink3)
+                    .onTapGesture { prefs.style[keyPath: key] = nil }
+                    .help("Back to the default")
+            }
+        }
+        .padding(.horizontal, 10).frame(height: 32)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10).fill(ink.dark ? Color.white.opacity(0.06) : Color.black.opacity(0.05)))
+    }
+
+    private var styleTab: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Themes").font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink3)
+            HStack(spacing: 0) {
+                ForEach(Array(PlayerStyle.presets.enumerated()), id: \.offset) { i, preset in
+                    VStack(spacing: 4) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10).fill(preset.style.deckTop.color)
+                            Circle().fill((preset.style.vinyl ?? RGB(hex: "#101012")).color).padding(7)
+                            Circle().fill(preset.style.labelRing.color).frame(width: 12, height: 12)
+                            Circle().fill(preset.style.accentColor.color).frame(width: 7, height: 7).offset(x: 17, y: -13)
+                        }
+                        .frame(width: 52, height: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(prefs.style == preset.style ? pstyle.accentColor.color : Color.white.opacity(0.08), lineWidth: prefs.style == preset.style ? 2 : 1))
+                        Text(preset.name).font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink2)
+                    }
+                    .modifier(HoverLift())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.3)) { prefs.style = preset.style }
+                        model.selectVinyl(preset.style.vinyl == nil ? 0 : VinylStyle.customIndex)
+                    }
+                    if i < PlayerStyle.presets.count - 1 { Spacer(minLength: 4) }
+                }
+            }
+            Text("Your colours").font(.system(size: 10, weight: .semibold)).foregroundStyle(ink.ink3)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                colorRow("Deck", \.deck, Tokens.sandTop)
+                colorRow("Record", \.vinyl, RGB(hex: "#101012"))
+                colorRow("Label ring", \.ring, Tokens.labelRing)
+                colorRow("Accent", \.accent, Tokens.accent)
+                colorRow("Card", \.card, RGB(hex: "#1e1e22"))
+                colorRow("Pet", \.pet, PetSpec.at(model.pet).palette["o"] ?? .white)
+            }
+        }
+    }
+
     private var pets: some View {
         VStack(alignment: .leading, spacing: 10) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 10) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5), spacing: 8) {
                 ForEach(Array(PetSpec.all.enumerated()), id: \.offset) { i, p in
                     let open = model.isPetUnlocked(i)
                     VStack(spacing: 5) {
                         ZStack(alignment: .bottom) {
                             RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.06))
-                            PetSprite(pet: i, pose: PetPose(eyes: open ? .open : .sleep), pixel: 2.5)
+                            PetSprite(pet: i, pose: PetPose(eyes: open ? .open : .sleep), pixel: 2, tint: i == model.pet ? pstyle.pet : nil)
                                 .opacity(open ? 1 : 0.3)
                                 .saturation(open ? 1 : 0)
                                 .padding(.bottom, 6)
@@ -517,8 +593,8 @@ private struct CratePanel: View {
                                     .padding(7)
                             }
                         }
-                        .frame(height: 60)
-                        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(i == model.pet ? Tokens.accent.color : Color.white.opacity(0.08), lineWidth: i == model.pet ? 2 : 1))
+                        .frame(height: 50)
+                        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(i == model.pet ? pstyle.accentColor.color : Color.white.opacity(0.08), lineWidth: i == model.pet ? 2 : 1))
                         Text(open ? p.name : minutesLabel(p.unlockMinutes ?? 0))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(open ? ink.ink2 : ink.ink3)
@@ -535,18 +611,7 @@ private struct CratePanel: View {
                 accessory(.sunglasses, on: model.wearShades) { model.toggleSunglasses() }
             }
 
-            Text(progressLine)
-                .font(.system(size: 10))
-                .foregroundStyle(ink.ink3)
         }
-    }
-
-    private var progressLine: String {
-        let listened = "Listened " + minutesLabel(model.listenedMinutes)
-        if let next = model.nextUnlock {
-            return listened + " · next: " + next.title + " at " + minutesLabel(next.minutes)
-        }
-        return listened + " · everything unlocked"
     }
 
     private func minutesLabel(_ m: Double) -> String {
@@ -557,7 +622,7 @@ private struct CratePanel: View {
         let open = model.isUnlocked(u)
         return HStack(spacing: 6) {
             Image(systemName: open ? (on ? "checkmark.circle.fill" : "circle") : "lock.fill")
-                .foregroundStyle(open && on ? Tokens.accent.color : ink.ink3)
+                .foregroundStyle(open && on ? pstyle.accentColor.color : ink.ink3)
             Text(open ? u.title : u.title + " · " + minutesLabel(u.minutes))
                 .foregroundStyle(open ? ink.ink : ink.ink3)
         }

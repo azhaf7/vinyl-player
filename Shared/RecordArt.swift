@@ -7,8 +7,8 @@ enum DiscImage {
     private static var cache: [String: CGImage] = [:]
     private static let lock = NSLock()
 
-    static func make(style: VinylStyle, diameter: CGFloat, scale: CGFloat = 2, detailed: Bool) -> CGImage? {
-        let key = "\(style.name)|\(diameter)|\(scale)|\(detailed)"
+    static func make(style: VinylStyle, diameter: CGFloat, scale: CGFloat = 2, detailed: Bool, ring: RGB = Tokens.labelRing) -> CGImage? {
+        let key = "\(style.base.hex)|\(style.ridge.hex)|\(diameter)|\(scale)|\(detailed)|\(ring.hex)"
         lock.lock(); defer { lock.unlock() }
         if let img = cache[key] { return img }
         let px = Int((diameter * scale).rounded())
@@ -56,10 +56,9 @@ enum DiscImage {
             }
             ring(4, dark: 0, lightWidth: 1, light: 0.03)
             ring(14, dark: 0.55, lightWidth: 1.5, light: 0.04)
-            ring(34, dark: 0.55, lightWidth: 2, light: 0.035)
-            ctx.setFillColor(Tokens.labelRing.cgColor); ctx.fillEllipse(in: disc(R - 42 * k))
-            ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(1); ctx.strokeEllipse(in: disc(R - 42 * k + 0.5))
-            ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(R - 49 * k))
+            ctx.setFillColor(ring.cgColor); ctx.fillEllipse(in: disc(R - 30 * k))
+            ctx.setStrokeColor(RGB.whiteAlpha(0.05).cgColor); ctx.setLineWidth(1); ctx.strokeEllipse(in: disc(R - 30 * k + 0.5))
+            ctx.setFillColor(RGB(hex: "#050506").cgColor); ctx.fillEllipse(in: disc(R - 35 * k))
         }
         let img = ctx.makeImage()
         cache[key] = img
@@ -93,6 +92,7 @@ struct MiniRecord: View {
     var ringWidth: CGFloat = 0
     var spindle: CGFloat = 0
     var sheen = true
+    var ring: RGB = Tokens.labelRing
 
     var body: some View {
         ZStack {
@@ -100,7 +100,7 @@ struct MiniRecord: View {
                 Image(decorative: img, scale: 2).resizable()
             }
             if ringWidth > 0 {
-                Circle().fill(Tokens.labelRing.color).padding(artInset - ringWidth)
+                Circle().fill(ring.color).padding(artInset - ringWidth)
             }
             CoverArt(image: art, index: artIndex)
                 .frame(width: diameter - 2 * artInset, height: diameter - 2 * artInset)

@@ -36,9 +36,17 @@ struct PetSpec {
         PetSpec(id: "bunny", name: "Tofu", palette: pal(k: "#3b3046", o: "#ece6f5", l: "#ffffff", p: "#f5a3c0", d: "#cfc6de"),
                 head: ["...kk......kk...", "...kpk....kpk...", "...kpk....kpk...", "...kpk....kpk...", "..kkpkkkkkkpkk.."]),
         PetSpec(id: "fox", name: "Kiki", palette: pal(k: "#3a1f14", o: "#e8783a", l: "#fff4e6", p: "#f59a9a", d: "#c45f28"),
-                head: [".k............k.", ".kok........kok.", ".kookkkkkkkkook."], unlockMinutes: 30),
+                head: [".k............k.", ".kok........kok.", ".kookkkkkkkkook."]),
         PetSpec(id: "penguin", name: "Nori", palette: pal(k: "#15171c", o: "#323844", l: "#f4f4f4", p: "#f6a96b", d: "#262b35"),
-                head: ["................", "....kkkkkkkk....", "..kkkkkkkkkkkk.."], eyePatch: "l", unlockMinutes: 120),
+                head: ["................", "....kkkkkkkk....", "..kkkkkkkkkkkk.."], eyePatch: "l"),
+        PetSpec(id: "dog", name: "Biscuit", palette: pal(k: "#3a2616", o: "#d9a066", l: "#f6e3c6", p: "#f59a9a", d: "#8a5a32"),
+                head: ["................", ".kkk........kkk.", "kddk.kkkkkk.kddk"]),
+        PetSpec(id: "hamster", name: "Peanut", palette: pal(k: "#3d2a1c", o: "#f2c48d", l: "#fff6e8", p: "#f7a1a1", d: "#d99a5b"),
+                head: ["................", "...kkk....kkk...", "..kpppkkkkpppk.."]),
+        PetSpec(id: "duck", name: "Quack", palette: pal(k: "#3a2e10", o: "#ffd34d", l: "#fff3b0", p: "#ff9f43", d: "#e6b422"),
+                head: ["................", ".....kkkkkk.....", "...kkoooooookk.."]),
+        PetSpec(id: "dragon", name: "Ember", palette: pal(k: "#2a1f45", o: "#8b6cd9", l: "#d9c8ff", p: "#ff8fb1", d: "#5b3fb0"),
+                head: [".k............k.", ".kdk........kdk.", "..kdkkkkkkkkdk.."]),
     ]
 
     static func at(_ i: Int) -> PetSpec { all[max(0, min(all.count - 1, i))] }
@@ -70,11 +78,13 @@ final class PetSpriteCache {
     private var cache: [String: CGImage] = [:]
     private let lock = NSLock()
 
-    func image(pet: Int, pose: PetPose) -> CGImage? {
-        let key = "\(pet)|\(pose.arms.rawValue)|\(pose.eyes.rawValue)|\(pose.legs.rawValue)|\(pose.headphones)|\(pose.sunglasses)"
+    func image(pet: Int, pose: PetPose, body: RGB? = nil) -> CGImage? {
+        let key = "\(pet)|\(pose.arms.rawValue)|\(pose.eyes.rawValue)|\(pose.legs.rawValue)|\(pose.headphones)|\(pose.sunglasses)|\(body?.hex ?? "")"
         lock.lock(); defer { lock.unlock() }
         if let img = cache[key] { return img }
-        let img = Self.render(grid: Self.grid(pet: pet, pose: pose), palette: PetSpec.at(pet).palette)
+        var palette = PetSpec.at(pet).palette
+        if let body { palette["o"] = body; palette["d"] = body.darker(0.28) }
+        let img = Self.render(grid: Self.grid(pet: pet, pose: pose), palette: palette)
         cache[key] = img
         return img
     }
@@ -168,9 +178,11 @@ struct PetSprite: View {
     let pet: Int
     let pose: PetPose
     var pixel: CGFloat = 3
+    /// Custom body colour (Style tab).
+    var tint: RGB? = nil
 
     var body: some View {
-        if let img = PetSpriteCache.shared.image(pet: pet, pose: pose) {
+        if let img = PetSpriteCache.shared.image(pet: pet, pose: pose, body: tint) {
             Image(decorative: img, scale: 1)
                 .interpolation(.none)
                 .resizable()

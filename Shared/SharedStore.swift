@@ -25,6 +25,7 @@ struct WidgetSnapshot: Codable, Equatable {
     /// Following Spotify / Apple Music: `upNext` holds recently played songs instead.
     var live: Bool? = nil
     var sunglasses: Bool? = nil
+    var style: PlayerStyle? = nil
 
     var tint: RGB { RGB(hex: tintHex) }
 

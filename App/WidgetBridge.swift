@@ -17,6 +17,7 @@ final class WidgetBridge {
         self.model = model
         model.onStateChange = { [weak self] in self?.schedule() }
         artwork.$revision.dropFirst().sink { [weak self] _ in self?.schedule() }.store(in: &bag)
+        Preferences.shared.$style.dropFirst().sink { [weak self] _ in DispatchQueue.main.async { self?.schedule() } }.store(in: &bag)
 
         SharedStore.beat()
         heartbeat = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { _ in SharedStore.beat() }
@@ -73,7 +74,7 @@ final class WidgetBridge {
                                   side: model.side, petIndex: model.pet, vinylIndex: model.vinyl,
                                   headphones: model.headphonesOn,
                                   updated: Date(), pausedSince: model.pausedSince, live: model.isLive,
-                                  sunglasses: model.sunglassesOn)
+                                  sunglasses: model.sunglassesOn, style: Preferences.shared.style)
         if let last = lastSnapshot, Self.same(last, snap) { return }
         lastSnapshot = snap
         SharedStore.writeSnapshot(snap)

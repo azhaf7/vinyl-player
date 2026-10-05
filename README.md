@@ -74,11 +74,12 @@ The app needs to have run at least once first.
 - **Play / pause:** the white button, a click on the record, or the menu bar menu. The pet walks over and works the tonearm.
 - **Skip:** the back and next buttons. The pet lifts the record out and drops in the next one. With the sample songs, going between song 3 and song 4 flips the record from side A to side B.
 - **Scrub:** drag along the progress bar. The tonearm follows.
-- **Your own cover:** click the small cover next to the song title.
+- **Your own cover:** in the crate's Up next tab, click "+ Use your own cover".
 - **Crate (☰):**
   - **Up next:** tap a record to play it.
-  - **Records:** pick a vinyl colour.
-  - **Pets:** pick Mochi, Bao, Pip or Tofu. Headphones unlock after a while of listening.
+  - **Records:** pick a vinyl colour, or your own with the colour well under **Custom**.
+  - **Pets:** ten pets: Mochi, Bao, Pip, Tofu, Kiki, Nori, Biscuit, Peanut, Quack and Ember. Headphones and sunglasses can be switched on and off. Everything is free.
+  - **Style:** one-tap themes (Classic, Midnight, Bubblegum, Forest, Ocean), plus colour pickers for the deck, record, label ring, accent, card and pet. The arrow next to a colour resets it.
 - **Share (⇧):** copies a link that opens the song as a sealed record (see below).
 - **Wake the pet:** click it after it falls asleep.
 - **Where it lives:** choose under **Show As** in the menu bar menu (the welcome window asks the first time):
@@ -90,7 +91,6 @@ The app needs to have run at least once first.
   - **History:** every song you've played, with your top songs.
   - **Friends:** add friends by their code and send them songs.
   - **Account:** your friend code.
-- **Unlocks:** listening unlocks headphones (10 min), Kiki the fox (30 min), sunglasses (1 h) and Nori the penguin (2 h). See your progress in the crate's **Pets** tab.
 - **Sharing:** open the share panel (⇧):
   - **Share…** sends a sealed-record link through Messages, AirDrop or Mail. Anyone can open it in a browser; friends with the app can open it on their turntable, and it's saved in their Inbox.
   - **Send to a friend** puts the record straight into a friend's in-app Inbox, with a notification. There's no login: each Mac gets a friend code like `@mochi4821`, and friends add each other's code once. This needs the one-time setup below.

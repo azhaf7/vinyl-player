@@ -50,6 +50,7 @@ final class Preferences: ObservableObject {
     @Published var senderName: String { didSet { d.set(senderName, forKey: "senderName") } }
     @Published var musicSource: MusicSource { didSet { d.set(musicSource.rawValue, forKey: "musicSource") } }
     @Published var displayMode: DisplayMode { didSet { d.set(displayMode.rawValue, forKey: "displayMode") } }
+    @Published var style: PlayerStyle { didSet { d.set(try? JSONEncoder().encode(style), forKey: "playerStyle") } }
     @Published var didOnboard: Bool { didSet { d.set(didOnboard, forKey: "didOnboard") } }
 
     /// Where the Shared Record page (web/shared-record) is hosted.
@@ -69,6 +70,7 @@ final class Preferences: ObservableObject {
         musicSource = MusicSource(rawValue: d.string(forKey: "musicSource") ?? "") ?? .nowPlaying
         displayMode = DisplayMode(rawValue: d.string(forKey: "displayMode") ?? "") ?? .desktop
         didOnboard = d.bool(forKey: "didOnboard")
+        style = d.data(forKey: "playerStyle").flatMap { try? JSONDecoder().decode(PlayerStyle.self, from: $0) } ?? PlayerStyle()
     }
 
     var launchAtLogin: Bool {

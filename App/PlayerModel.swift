@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import Observation
 
-enum Drawer { case queue, records, pets }
+enum Drawer { case queue, records, pets, style }
 
 /// Everything the pet view needs for one frame.
 struct PetRender: Equatable {
@@ -204,7 +204,6 @@ final class PlayerModel {
             let before = listened
             listened += dt
             if Int(listened / 5000) != Int(before / 5000) { listenedMinutes = listened / 60_000 }
-            checkUnlocks(from: before)
             if Date().timeIntervalSince(lastSave) > 15 { save() }
         }
 
@@ -217,7 +216,7 @@ final class PlayerModel {
     }
 
     private func applyArm(_ p: Double, dt: Double, tiltOverride: Double?) {
-        let deg = armOver ? 18 + (prefs.armFollowsGroove ? 10 * p : 0) : 3
+        let deg = armOver ? 18 + (prefs.armFollowsGroove ? 5 * p : 0) : 3
         swing.set(deg); swing.advance(dt)
         lift.set(armLow ? -1.4 : 3.5); lift.advance(dt)
         shadowH.set(armLow ? 1 : 12); shadowH.advance(dt)
@@ -336,29 +335,12 @@ final class PlayerModel {
 
     // MARK: Unlocks
 
-    func isUnlocked(_ u: PetUnlock) -> Bool { listened >= u.minutes * 60_000 }
-    func isPetUnlocked(_ i: Int) -> Bool { PetSpec.at(i).unlockMinutes.map { listened >= $0 * 60_000 } ?? true }
+    // Everything is free: all pets and accessories are available from the start.
+    func isUnlocked(_ u: PetUnlock) -> Bool { true }
+    func isPetUnlocked(_ i: Int) -> Bool { true }
     var phonesUnlocked: Bool { isUnlocked(.headphones) }
     var headphonesOn: Bool { isUnlocked(.headphones) && wearPhones }
     var sunglassesOn: Bool { isUnlocked(.sunglasses) && wearShades }
-
-    /// The next thing to unlock and the minutes it needs.
-    var nextUnlock: (title: String, minutes: Double)? {
-        var all: [(String, Double)] = PetUnlock.allCases.map { ($0.title, $0.minutes) }
-        all += PetSpec.all.compactMap { p in p.unlockMinutes.map { (p.name + " the " + p.id, $0) } }
-        return all.filter { $0.1 * 60_000 > listened }.min(by: { $0.1 < $1.1 }).map { (title: $0.0, minutes: $0.1) }
-    }
-
-    private func checkUnlocks(from before: Double) {
-        var thresholds: [(String, Double)] = PetUnlock.allCases.map { ($0.title, $0.minutes) }
-        thresholds += PetSpec.all.compactMap { p in p.unlockMinutes.map { (p.name, $0) } }
-        for (title, minutes) in thresholds where before < minutes * 60_000 && listened >= minutes * 60_000 {
-            justUnlocked = title
-            hop = 1; happyUntil = clock + 1800
-            listenedMinutes = listened / 60_000
-            save(); stateChanged()
-        }
-    }
 
     func petTapped() {
         pausedFor = 0; lid = 1; hop = 1; happyUntil = clock + 900
