@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<defs><filter id="icon" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity="0.3"/></filter><filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#000" flood-opacity="0.35"/></filter><filter id="sh2" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.35"/></filter>
+  <clipPath id="sq"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath>
+  <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6EFE3"/><stop offset="1" stop-color="#E4D6C2"/></linearGradient>
+         <linearGradient id="sleeve" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3756E0"/><stop offset="1" stop-color="#1B2C8F"/></linearGradient></defs>
+<g filter="url(#icon)"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#paper)"/></g>
+<g clip-path="url(#sq)">
+  <g transform="rotate(-8 512 560)">
+    <g filter="url(#sh2)">
+  <circle cx="600" cy="450" r="250" fill="#0d0d10"/>
+  <circle cx="600" cy="450" r="235" fill="none" stroke="#2a2a30" stroke-width="3"/><circle cx="600" cy="450" r="215" fill="none" stroke="#2a2a30" stroke-width="3"/><circle cx="600" cy="450" r="195" fill="none" stroke="#2a2a30" stroke-width="3"/><circle cx="600" cy="450" r="175" fill="none" stroke="#2a2a30" stroke-width="3"/><circle cx="600" cy="450" r="155" fill="none" stroke="#2a2a30" stroke-width="3"/><circle cx="600" cy="450" r="135" fill="none" stroke="#2a2a30" stroke-width="3"/><circle cx="600" cy="450" r="115" fill="none" stroke="#2a2a30" stroke-width="3"/>
+  <path d="M 600 450 L 678.8305905988171 212.75384516110344 A 250 250 0 0 1 782.9222172184552 279.59030999416643 Z" fill="#ffffff" opacity="0.10"/>
+  <path d="M 600 450 L 519.1776082841242 686.5750219218536 A 250 250 0 0 1 433.430994680044 636.42630304418 Z" fill="#ffffff" opacity="0.06"/>
+  <circle cx="600" cy="450" r="90" fill="#E9C46A"/>
+  <circle cx="600" cy="450" r="67.5" fill="none" stroke="#B5302A" stroke-width="6.25"/>
+  <circle cx="600" cy="450" r="8.75" fill="#0a0a0b"/></g>
+    <g filter="url(#sh)">
+      <rect x="200" y="400" width="440" height="440" rx="12" fill="url(#sleeve)"/>
+      <circle cx="420" cy="620" r="150" fill="none" stroke="#F6EFE3" stroke-opacity="0.9" stroke-width="16"/>
+      <circle cx="420" cy="620" r="100" fill="none" stroke="#F6EFE3" stroke-opacity="0.55" stroke-width="16"/>
+      <circle cx="420" cy="620" r="50" fill="#E9C46A"/>
+      <rect x="200" y="400" width="440" height="440" rx="12" fill="none" stroke="#fff" stroke-opacity="0.15" stroke-width="3"/>
+    </g>
+  </g></g>
+<rect x="100.5" y="100.5" width="823" height="823" rx="185" fill="none" stroke="#000" stroke-opacity="0.12"/>
+</svg>
