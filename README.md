@@ -1,3 +1,5 @@
+<p align="center"><img src="App/Assets.xcassets/AppIcon.appiconset/icon_256.png" width="128" alt="Vinyl Player icon"></p>
+
 # Vinyl Player
 
 A tiny turntable for the Mac desktop. A little pixel pet lives on top of it: it walks over to lower or lift the tonearm when you press play or pause, swaps records when the song changes, and dances to the beat while music plays.
