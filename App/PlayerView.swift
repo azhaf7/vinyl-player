@@ -198,16 +198,14 @@ private struct InfoRow: View {
                 PlayButton(playing: model.playing, ink: ink) { model.toggle() }
                 IconButton(symbol: "forward.end.fill", size: 32, ink: ink) { model.next() }
                 if let url = model.shareURL() {
-                    // AirDrop, Messages, Mail, Notes, Copy Link…: the song arrives as a sealed record.
-                    ShareLink(item: url, subject: Text(model.track.title), message: Text(ShareLinks.message(for: model.track))) {
+                    // Copy Link, Messages, WhatsApp, Telegram, Mail, AirDrop, More…: the song goes as a sealed record.
+                    ShareOptions(url: url, title: model.track.title, message: ShareLinks.message(for: model.track)) {
                         Image(systemName: "square.and.arrow.up")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(ink.ink2)
                             .frame(width: 30, height: 30)
                             .contentShape(Circle())
                     }
-                    .buttonStyle(PressStyle())
-                    .help("Share as a record")
                 }
                 IconButton(symbol: "line.3.horizontal", size: 30, ink: ink, selected: model.drawer != nil && model.drawer != .style) {
                     model.drawer = model.drawer == nil || model.drawer == .style ? .queue : nil; model.shareOpen = false

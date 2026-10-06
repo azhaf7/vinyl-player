@@ -136,21 +136,71 @@ struct TrackArt: View {
     }
 }
 
-/// "Send to…" menu listing friends.
-/// The Mac's share menu for a song: AirDrop, Messages, Mail, Notes, Copy Link and the rest.
-/// The link opens the song as a sealed record.
+/// The share menu for a song: Copy Link first, then the usual apps, then the Mac's own share menu.
+/// The link opens the song as a sealed record on Crate's page.
 struct ShareMenu: View {
     let track: Track
     let model: PlayerModel
 
     var body: some View {
         if let url = ShareLinks.url(for: track, pet: PetSpec.at(model.pet).name) {
-            ShareLink(item: url, subject: Text(track.title), message: Text(ShareLinks.message(for: track))) {
+            ShareOptions(url: url, title: track.title, message: ShareLinks.message(for: track)) {
                 Label("Share", systemImage: "square.and.arrow.up")
             }
-            .buttonStyle(.borderless)
-            .fixedSize()
         }
+    }
+}
+
+/// A menu of ways to send a record link. Every share button in the app uses it.
+struct ShareOptions<Content: View>: View {
+    let url: URL
+    let title: String
+    let message: String
+    @ViewBuilder var label: () -> Content
+
+    var body: some View {
+        Menu {
+            Button { ShareActions.copy(url) } label: { Label("Copy Link", systemImage: "link") }
+            Divider()
+            Button { ShareActions.send(.composeMessage, url: url, message: message) } label: { Label("Messages", systemImage: "message") }
+            Button { ShareActions.open("https://wa.me/?text=" + ShareActions.enc(message + " " + url.absoluteString)) } label: { Label("WhatsApp", systemImage: "phone.bubble") }
+            Button { ShareActions.open("https://t.me/share/url?url=" + ShareActions.enc(url.absoluteString) + "&text=" + ShareActions.enc(message)) } label: { Label("Telegram", systemImage: "paperplane") }
+            Button { ShareActions.send(.composeEmail, url: url, message: message, subject: title) } label: { Label("Mail", systemImage: "envelope") }
+            Button { ShareActions.send(.sendViaAirDrop, url: url, message: message) } label: { Label("AirDrop", systemImage: "dot.radiowaves.left.and.right") }
+            Divider()
+            ShareLink(item: url, subject: Text(title), message: Text(message)) { Label("More…", systemImage: "square.and.arrow.up") }
+        } label: {
+            label()
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Share as a record")
+    }
+}
+
+enum ShareActions {
+    static func enc(_ s: String) -> String {
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
+    }
+
+    static func copy(_ url: URL) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(url.absoluteString, forType: .string)
+    }
+
+    static func open(_ link: String) {
+        if let u = URL(string: link) { NSWorkspace.shared.open(u) }
+    }
+
+    /// Messages, Mail and AirDrop through the Mac's own sharing services.
+    static func send(_ name: NSSharingService.Name, url: URL, message: String, subject: String? = nil) {
+        guard let service = NSSharingService(named: name) else { copy(url); return }
+        if let subject { service.subject = subject }
+        let items: [Any] = name == .sendViaAirDrop ? [url] : [message, url]
+        if service.canPerform(withItems: items) { service.perform(withItems: items) } else { copy(url) }
     }
 }
 
