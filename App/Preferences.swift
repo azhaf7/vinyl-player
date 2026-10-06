@@ -66,8 +66,10 @@ final class Preferences: ObservableObject {
     @Published var hotKeys: Bool { didSet { d.set(hotKeys, forKey: "hotKeys") } }
     @Published var showPet: Bool { didSet { d.set(showPet, forKey: "showPet") } }
 
-    /// Where the Shared Record page (web/shared-record) is hosted.
-    static let defaultShareBaseURL = "https://azhaf7.github.io/vinyl-player/shared-record/"
+    /// Where shared records open: Crate's record page, which reads the same link fields.
+    static let defaultShareBaseURL = "https://crate-three-mu.vercel.app/r/"
+    /// Earlier default; Macs still set to it move to the new one.
+    static let oldShareBaseURL = "https://azhaf7.github.io/vinyl-player/shared-record/"
 
     private init() {
         let d = UserDefaults.standard
@@ -78,7 +80,8 @@ final class Preferences: ObservableObject {
         petOperatesArm = d.bool(forKey: "petOperatesArm")
         floatAboveWindows = d.bool(forKey: "floatAboveWindows")
         playerSize = PlayerSize(rawValue: d.string(forKey: "playerSize") ?? "") ?? .medium
-        shareBaseURL = d.string(forKey: "shareBaseURL") ?? Preferences.defaultShareBaseURL
+        let savedBase = d.string(forKey: "shareBaseURL")
+        shareBaseURL = savedBase == nil || savedBase == Preferences.oldShareBaseURL ? Preferences.defaultShareBaseURL : savedBase!
         senderName = d.string(forKey: "senderName") ?? ""
         musicSource = MusicSource(rawValue: d.string(forKey: "musicSource") ?? "") ?? .nowPlaying
         displayMode = DisplayMode(rawValue: d.string(forKey: "displayMode") ?? "") ?? .desktop

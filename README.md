@@ -104,22 +104,14 @@ The app needs to have run at least once first.
 
 ## Sharing records
 
-The share link opens `web/shared-record/`, a small web page that people without the app can open.
+Share links open on [Crate](https://github.com/azhaf7/crate)'s record page,
+`https://crate-three-mu.vercel.app/r/`, which anyone can open in a browser: the sealed sleeve, the
+record sliding out, and a 30-second preview, with buttons for Spotify and Apple Music. Crate reads the
+same link fields this app writes (`song`, `by`, `from`, `pet`, `art`, `spotify`), and Notch uses the
+same page.
 
-### Host it on Vercel (free, works with a private repo)
-
-1. Sign in at [vercel.com](https://vercel.com) with GitHub, then choose **Add New → Project** and import **vinyl-player**.
-2. Set **Root Directory** to `web`, leave **Framework Preset** on **Other**, and click **Deploy**.
-3. Copy the address Vercel gives you (e.g. `https://vinyl-player-xyz.vercel.app`).
-4. In the app, open **Settings… → Sharing** and paste the address followed by `/shared-record/`. For example: `https://vinyl-player-xyz.vercel.app/shared-record/`.
-
-Vercel redeploys automatically whenever `web/` changes.
-
-### Other hosts
-
-Any static host works: upload the `web/` folder and paste the page's address into **Settings… → Sharing**.
-
-[Netlify Drop](https://app.netlify.com/drop) works: drag the `web` folder onto it. GitHub Pages also works if the repository is public.
+To use a different page, paste its address into **Settings… → Sharing**. The older page in `web/` still
+works too.
 
 ## Project layout
 

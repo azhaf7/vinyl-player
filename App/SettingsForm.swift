@@ -94,7 +94,7 @@ struct SettingsForm: View {
             Section("Sharing") {
                 TextField("Your name on shared records", text: $prefs.senderName, prompt: Text("A friend"))
                 TextField("Shared record page", text: $prefs.shareBaseURL)
-                Text("Where share links open for people without the app. Host the web folder (e.g. on Vercel) and paste its shared-record address here.")
+                Text("Where share links open for people without the app. Crate's record page by default; any page that reads the same link works.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
